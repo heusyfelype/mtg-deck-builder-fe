@@ -50,7 +50,7 @@ const Collection = () => {
                 ...filtersToApply
             });
 
-            const response = await fetch(`http://localhost:4000/api/cards?${params.toString()}`);
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/cards?${params.toString()}`);
             const result = await response.json();
 
             if (result.success && result.data && result.data.cards) {
