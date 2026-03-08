@@ -112,6 +112,9 @@ const Home = () => {
                     <Button variant="primary" onClick={() => navigate('/deck-builder')}>
                         Criar Novo Deck
                     </Button>
+                    <Button variant="secondary" onClick={() => navigate('/friends')}>
+                        Gerenciar Amizades
+                    </Button>
                     <Button variant="secondary" onClick={handleLogout}>
                         Sair
                     </Button>

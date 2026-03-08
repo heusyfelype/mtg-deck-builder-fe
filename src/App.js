@@ -5,6 +5,7 @@ import Home from './views/Home';
 import Collection from './views/Collection';
 import DeckBuilder from './views/DeckBuilder';
 import DeckEditor from './views/DeckEditor';
+import Friends from './views/Friends';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
           <Route path="/collection" element={<Collection />} />
+          <Route path="/friends" element={<Friends />} />
           <Route path="/deck-builder" element={<DeckBuilder />} />
           <Route path="/deck-editor/:deckId" element={<DeckEditor />} />
           {/* Default redirect to login for now */}
