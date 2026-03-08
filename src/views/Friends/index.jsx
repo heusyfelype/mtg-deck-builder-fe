@@ -6,9 +6,11 @@ import './Friends.css';
 const Friends = () => {
     const navigate = useNavigate();
     const [friends, setFriends] = useState([]);
+    const [pendingInvites, setPendingInvites] = useState([]);
     const [searchResults, setSearchResults] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loadingFriends, setLoadingFriends] = useState(false);
+    const [loadingPending, setLoadingPending] = useState(false);
     const [loadingSearch, setLoadingSearch] = useState(false);
 
     const fetchFriends = useCallback(async () => {
@@ -39,9 +41,38 @@ const Friends = () => {
         }
     }, []);
 
+    const fetchPendingInvites = useCallback(async () => {
+        const savedUser = localStorage.getItem('mtg_user');
+        const user = savedUser ? JSON.parse(savedUser) : null;
+        const userId = user?.id || user?._id;
+        const token = localStorage.getItem('mtg_token');
+
+        if (!userId) return;
+
+        setLoadingPending(true);
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/friend-invites/pending/${userId}`, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                setPendingInvites(result.data);
+            }
+        } catch (error) {
+            console.error('Error fetching pending invites:', error);
+        } finally {
+            setLoadingPending(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchFriends();
-    }, [fetchFriends]);
+        fetchPendingInvites();
+    }, [fetchFriends, fetchPendingInvites]);
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -137,6 +168,34 @@ const Friends = () => {
         }
     };
 
+    const handleRespondInvite = async (inviteId, status) => {
+        const token = localStorage.getItem('mtg_token');
+
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/friend-invites/respond`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ inviteId, status })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // Refresh lists
+                await fetchFriends();
+                await fetchPendingInvites();
+            } else {
+                alert(result.message || 'Erro ao responder convite');
+            }
+        } catch (error) {
+            console.error('Error responding to invite:', error);
+            alert('Erro ao responder convite');
+        }
+    };
+
     return (
         <div className="view-friends">
             <div className="view-friends__content">
@@ -151,6 +210,29 @@ const Friends = () => {
                 <div className="view-friends__sections">
                     <section className="view-friends__section">
                         <h2 className="view-friends__section-title">Seus Amigos</h2>
+
+                        {pendingInvites.length > 0 && (
+                            <div className="view-friends__pending-invites">
+                                <h3 className="view-friends__subsection-title">Solicitações Pendentes</h3>
+                                {pendingInvites.map(invite => (
+                                    <div key={invite._id} className="view-friends__card view-friends__card--pending">
+                                        <div className="view-friends__card-info">
+                                            <span className="view-friends__card-name">{invite.sender_name || 'Usuário'}</span>
+                                            <span className="view-friends__card-email">Quer ser seu amigo</span>
+                                        </div>
+                                        <div className="view-friends__card-actions">
+                                            <Button variant="primary" onClick={() => handleRespondInvite(invite._id, 2)}>
+                                                Aceitar
+                                            </Button>
+                                            <Button variant="secondary" onClick={() => handleRespondInvite(invite._id, 3)}>
+                                                Recusar
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {loadingFriends ? (
                             <div className="view-friends__loading">Carregando amigos...</div>
                         ) : friends.length > 0 ? (

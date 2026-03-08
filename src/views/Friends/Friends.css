@@ -57,6 +57,27 @@
     color: #ff8a00;
 }
 
+.view-friends__subsection-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary, #b3b3b3);
+}
+
+.view-friends__pending-invites {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-friends__card--pending {
+    border: 1px solid rgba(255, 138, 0, 0.3);
+}
+
+.view-friends__card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
 .view-friends__search-form {
     display: flex;
     gap: 1rem;
