@@ -43,9 +43,90 @@ const Home = () => {
         }
     }, []);
 
+    // Friends list (for checkbox)
+    const [showFriends, setShowFriends] = useState(false);
+    const [friends, setFriends] = useState([]);
+    const [loadingFriends, setLoadingFriends] = useState(false);
+    const [friendsPage, setFriendsPage] = useState(1);
+    const friendsPageSize = 6;
+
+    // Friend decks states
+    const [selectedFriend, setSelectedFriend] = useState(null);
+    const [friendDecks, setFriendDecks] = useState([]);
+    const [loadingFriendDecks, setLoadingFriendDecks] = useState(false);
+
+    const fetchFriends = useCallback(async () => {
+        const savedUser = localStorage.getItem('mtg_user');
+        const user = savedUser ? JSON.parse(savedUser) : null;
+        const userId = user?.id || user?._id;
+        const token = localStorage.getItem('mtg_token');
+
+        if (!userId) return;
+
+        setLoadingFriends(true);
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/friends/${userId}`, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                setFriends(result.data);
+                setFriendsPage(1);
+            }
+        } catch (error) {
+            console.error('Error fetching friends:', error);
+        } finally {
+            setLoadingFriends(false);
+        }
+    }, []);
+
+    const fetchFriendDecks = async (friendId) => {
+        const token = localStorage.getItem('mtg_token');
+        setLoadingFriendDecks(true);
+
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/decks-by-user/simplified/${friendId}`, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                setFriendDecks(result.data);
+            }
+        } catch (error) {
+            console.error('Error fetching friend decks:', error);
+        } finally {
+            setLoadingFriendDecks(false);
+        }
+    };
+
+    const handleFriendClick = (friend) => {
+        if (selectedFriend?.user_id === friend.user_id) {
+            setSelectedFriend(null);
+            setFriendDecks([]);
+            return;
+        }
+
+        setSelectedFriend(friend);
+        fetchFriendDecks(friend.user_id);
+    };
+
     useEffect(() => {
         fetchDecks();
     }, [fetchDecks]);
+
+    useEffect(() => {
+        if (showFriends) {
+            fetchFriends();
+        }
+    }, [showFriends, fetchFriends]);
 
     const handleLogout = () => {
         localStorage.removeItem('mtg_token');
@@ -121,6 +202,57 @@ const Home = () => {
                 </div>
 
                 <section className="view-home__decks-section">
+                    <div className="view-home__friends-toggle">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={showFriends}
+                                onChange={(e) => setShowFriends(e.target.checked)}
+                            />{' '}
+                            Ver decks de meus amigos
+                        </label>
+
+                        {showFriends && (
+                            <div className="friends-list">
+                                {loadingFriends ? (
+                                    <div className="friends-list__loading">Carregando amigos...</div>
+                                ) : friends.length > 0 ? (
+                                    <>
+                                        <div className="friends-list__container">
+                                            {friends.slice((friendsPage - 1) * friendsPageSize, friendsPage * friendsPageSize).map(f => (
+                                                <div
+                                                    key={f.user_id}
+                                                    className="friends-list__item"
+                                                    onClick={() => handleFriendClick(f)}
+                                                >
+                                                    <span className={`friends-list__friend-badge ${selectedFriend?.user_id === f.user_id ? 'active' : ''}`}>{f.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="friends-list__pager">
+                                            <button
+                                                className="friends-list__pager-btn"
+                                                onClick={() => setFriendsPage(p => Math.max(1, p - 1))}
+                                                disabled={friendsPage === 1}
+                                            >
+                                                ◀
+                                            </button>
+                                            <span className="friends-list__pager-info">{friendsPage} / {Math.max(1, Math.ceil(friends.length / friendsPageSize))}</span>
+                                            <button
+                                                className="friends-list__pager-btn"
+                                                onClick={() => setFriendsPage(p => Math.min(Math.ceil(friends.length / friendsPageSize), p + 1))}
+                                                disabled={friendsPage >= Math.ceil(friends.length / friendsPageSize)}
+                                            >
+                                                ▶
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="friends-list__empty">Você não possui amigos para mostrar.</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <div className="view-home__section-header">
                         <h2 className="view-home__section-title">Seus Decks</h2>
                         <span className="view-home__deck-count">{userDecks.length} Decks</span>
@@ -145,6 +277,34 @@ const Home = () => {
                         </div>
                     )}
                 </section>
+
+                {showFriends && selectedFriend && (
+                    <section className="view-home__decks-section view-home__decks-section--friends">
+                        <div className="view-home__section-header">
+                            <h2 className="view-home__section-title">Decks de {selectedFriend.name}</h2>
+                            <span className="view-home__deck-count">{friendDecks.length} Decks</span>
+                        </div>
+
+                        {loadingFriendDecks ? (
+                            <div className="view-home__decks-loading">Carregando decks de {selectedFriend.name}...</div>
+                        ) : friendDecks.length > 0 ? (
+                            <div className="view-home__decks-grid">
+                                {friendDecks.map((deck, index) => (
+                                    <DeckBox
+                                        key={deck.deck_by_user_id || index}
+                                        deck={deck}
+                                        onClick={() => navigate(`/deck-editor/${deck.deck_by_user_id || index}`)}
+                                        readOnly={true}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="view-home__decks-empty">
+                                {selectedFriend.name} ainda não possui nenhum deck publicado.
+                            </div>
+                        )}
+                    </section>
+                )}
             </div>
 
             <ConfirmModal

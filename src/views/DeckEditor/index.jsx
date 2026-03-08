@@ -258,6 +258,47 @@ const DeckEditor = () => {
         setSideboardDraft({});
     };
 
+    const isReadOnly = useMemo(() => {
+        if (!originalDeck) return false;
+        const savedUser = localStorage.getItem('mtg_user');
+        const user = savedUser ? JSON.parse(savedUser) : null;
+        const currentUserId = user?.id || user?._id;
+        return originalDeck.userId !== currentUserId;
+    }, [originalDeck]);
+
+    const handleCloneDeck = async () => {
+        const token = localStorage.getItem('mtg_token');
+        const savedUser = localStorage.getItem('mtg_user');
+        const user = savedUser ? JSON.parse(savedUser) : null;
+        const userId = user?.id || user?._id;
+
+        if (!deckName || !deckName.trim()) return alert('Dê um nome ao seu deck.');
+
+        const payload = [{
+            userId,
+            deckName: `${deckName} (Cópia)`,
+            cards: Object.values(deckDraft || {}).map(i => ({ quantity: i.added.toString(), cardId: i.card.id })),
+            sideborad: Object.values(sideboardDraft || {}).map(i => ({ quantity: i.added.toString(), cardId: i.card.id }))
+        }];
+
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/decks-by-user`, {
+                method: 'PUT', // The user uses PUT for saving new decks as well in DeckBuilder.jsx
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Deck clonado com sucesso!');
+                handleCancelEdit(true);
+            }
+        } catch (error) {
+            console.error('Error cloning deck:', error);
+            alert('Erro ao clonar deck.');
+        }
+    };
+
     const totalMain = Object.values(deckDraft || {}).reduce((acc, curr) => acc + curr.added, 0);
     const totalSide = Object.values(sideboardDraft || {}).reduce((acc, curr) => acc + curr.added, 0);
     const totalAdded = totalMain + totalSide;
@@ -266,38 +307,48 @@ const DeckEditor = () => {
         <div className="view-deck-editor">
             <div className="view-deck-editor__header">
                 <div>
-                    <h1>Editando Deck: {originalDeck?.deckName}</h1>
-                    <p>Faça as alterações desejadas e salve seu deck.</p>
+                    <h1>{isReadOnly ? `Visualizando Deck: ${originalDeck?.deckName}` : `Editando Deck: ${originalDeck?.deckName}`}</h1>
+                    <p>{isReadOnly ? 'Você está visualizando o deck de um amigo. Você pode criar uma cópia para você.' : 'Faça as alterações desejadas e salve seu deck.'}</p>
                 </div>
                 <div className="view-deck-editor__header-actions">
                     <Button variant="secondary" onClick={() => navigate('/home')}>Voltar</Button>
-                    <Button variant="primary" onClick={handleSaveEdits} disabled={totalAdded === 0}>
-                        Salvar Alterações ({totalMain} + {totalSide})
-                    </Button>
+                    {isReadOnly ? (
+                        <Button variant="primary" onClick={handleCloneDeck}>
+                            Clonar para Meus Decks
+                        </Button>
+                    ) : (
+                        <Button variant="primary" onClick={handleSaveEdits} disabled={totalAdded === 0}>
+                            Salvar Alterações ({totalMain} + {totalSide})
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            <div className="view-deck-editor__filters">
-                <CardFilters onSearch={handleSearch} />
-            </div>
+            {!isReadOnly && (
+                <div className="view-deck-editor__filters">
+                    <CardFilters onSearch={handleSearch} />
+                </div>
+            )}
 
             <div className="view-deck-editor__content">
-                {loading && userCollection.length === 0 ? (
-                    <div className="deck-editor-loading">Carregando dados...</div>
-                ) : (
-                    <CardHorizontalList
-                        cards={filteredCards}
-                        collectionDraft={deckDraft || {}}
-                        sideboardDraft={sideboardDraft || {}}
-                        onAddCard={handleAddCard}
-                        onRemoveCard={handleRemoveCard}
-                        onAddSideboard={handleAddSideboard}
-                        onRemoveSideboard={handleRemoveSideboard}
-                        onImageClick={setZoomedCard}
-                        loading={loading}
-                        hasMore={false}
-                        onLoadMore={() => { }}
-                    />
+                {!isReadOnly && (
+                    loading && userCollection.length === 0 ? (
+                        <div className="deck-editor-loading">Carregando dados...</div>
+                    ) : (
+                        <CardHorizontalList
+                            cards={filteredCards}
+                            collectionDraft={deckDraft || {}}
+                            sideboardDraft={sideboardDraft || {}}
+                            onAddCard={handleAddCard}
+                            onRemoveCard={handleRemoveCard}
+                            onAddSideboard={handleAddSideboard}
+                            onRemoveSideboard={handleRemoveSideboard}
+                            onImageClick={setZoomedCard}
+                            loading={loading}
+                            hasMore={false}
+                            onLoadMore={() => { }}
+                        />
+                    )
                 )}
             </div>
 
@@ -313,6 +364,7 @@ const DeckEditor = () => {
                 onImageClick={setZoomedCard}
                 onClear={handleClearDeck}
                 onCancelEdit={() => handleCancelEdit(false)}
+                readOnly={isReadOnly}
             />
 
             <CardPreviewModal

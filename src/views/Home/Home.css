@@ -99,3 +99,132 @@
     background: rgba(0, 0, 0, 0.1);
     border-radius: 12px;
 }
+
+.view-home__friends-toggle {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    align-items: center;
+}
+
+.view-home__friends-toggle label {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.view-home__friends-toggle label:hover {
+    color: #ffd700;
+}
+
+.view-home__friends-toggle input[type="checkbox"] {
+    accent-color: #ffd700;
+    width: 18px;
+    height: 18px;
+}
+
+.friends-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.friends-list__container {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px 0;
+}
+
+.friends-list__item {
+    transition: transform 0.2s;
+}
+
+.friends-list__item:hover {
+    transform: translateY(-2px);
+}
+
+.friends-list__friend-badge {
+    position: static !important;
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #ffd700 !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    border: 1px solid #ffd700 !important;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s;
+}
+
+.friends-list__friend-badge.active {
+    background: #ffd700 !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.friends-list__pager {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.friends-list__pager-btn {
+    background: transparent;
+    color: #ffd700;
+    border: none;
+    font-size: 1.2rem;
+    padding: 5px;
+    cursor: pointer;
+    transition: transform 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.friends-list__pager-btn:hover:not(:disabled) {
+    transform: scale(1.2);
+    color: #fff;
+}
+
+.friends-list__pager-btn:disabled {
+    color: #444;
+    cursor: not-allowed;
+}
+
+.friends-list__pager-info {
+    color: #aaa;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: monospace;
+}
+
+.friends-list__loading,
+.friends-list__empty {
+    color: #888;
+    font-style: italic;
+    padding: 10px 0;
+    font-size: 0.95rem;
+}

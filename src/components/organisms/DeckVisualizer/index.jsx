@@ -12,7 +12,8 @@ const DeckVisualizer = ({
     onRemoveSideboard,
     onImageClick,
     onClear,
-    onCancelEdit
+    onCancelEdit,
+    readOnly = false
 }) => {
     const [modalConfig, setModalConfig] = useState(null); // { type: 'clear' | 'cancel', message: string, onConfirm: () => void }
 
@@ -43,7 +44,7 @@ const DeckVisualizer = ({
     const sortedMainCMCs = useMemo(() => getSortedCMCs(groupedMain), [groupedMain]);
     const sortedSideboardCMCs = useMemo(() => getSortedCMCs(groupedSideboard), [groupedSideboard]);
 
-    if (Object.keys(deckDraft).length === 0 && Object.keys(sideboardDraft).length === 0) {
+    if (!readOnly && Object.keys(deckDraft).length === 0 && Object.keys(sideboardDraft).length === 0) {
         return (
             <div className="deck-visualizer-empty">
                 <p>Seu deck está vazio. Adicione cards da sua coleção acima.</p>
@@ -78,10 +79,12 @@ const DeckVisualizer = ({
                                     />
                                     <div className="deck-visualizer__card-overlay">
                                         <span className="deck-visualizer__card-name">{card.name}</span>
-                                        <div className="deck-visualizer__card-actions">
-                                            <button onClick={() => onRemove(card)}>-</button>
-                                            <button onClick={() => onAdd(card)}>+</button>
-                                        </div>
+                                        {!readOnly && (
+                                            <div className="deck-visualizer__card-actions">
+                                                <button onClick={() => onRemove(card)}>-</button>
+                                                <button onClick={() => onAdd(card)}>+</button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -101,19 +104,22 @@ const DeckVisualizer = ({
                     value={deckName}
                     onChange={(e) => setDeckName(e.target.value)}
                     placeholder="Seu deck"
+                    disabled={readOnly}
                 />
                 <div className="deck-visualizer__header-actions">
-                    <button
-                        className="deck-visualizer__clear-btn"
-                        onClick={() => setModalConfig({
-                            type: 'clear',
-                            message: 'Todos os cards deste deck serão removidos, deseja continuar?',
-                            onConfirm: onClear
-                        })}
-                    >
-                        Limpar Seleção
-                    </button>
-                    {onCancelEdit && (
+                    {!readOnly && (
+                        <button
+                            className="deck-visualizer__clear-btn"
+                            onClick={() => setModalConfig({
+                                type: 'clear',
+                                message: 'Todos os cards deste deck serão removidos, deseja continuar?',
+                                onConfirm: onClear
+                            })}
+                        >
+                            Limpar Seleção
+                        </button>
+                    )}
+                    {onCancelEdit && !readOnly && (
                         <button
                             className="deck-visualizer__cancel-edit-btn"
                             onClick={() => setModalConfig({
