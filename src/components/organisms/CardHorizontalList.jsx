@@ -17,6 +17,17 @@ const CardHorizontalList = ({
     ownerId,
     isFriendList = false
 }) => {
+    const [zoomLevel, setZoomLevel] = React.useState(() => {
+        return localStorage.getItem('mtg_card_list_zoom') || 'normal';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('mtg_card_list_zoom', zoomLevel);
+    }, [zoomLevel]);
+
+    const handleZoomIn = () => setZoomLevel('normal');
+    const handleZoomOut = () => setZoomLevel('small');
+
     // Ref for the scrollable list container (used for wheel-on-scrollbar detection)
     const listRef = useRef(null);
 
@@ -34,13 +45,14 @@ const CardHorizontalList = ({
                 }
             },
             {
+                root: listRef.current,
                 // Trigger slightly before the end for a smoother experience
                 rootMargin: '0px 200px 0px 0px'
             }
         );
 
         if (node) observerRef.current.observe(node);
-    }, [hasMore, loading, onLoadMore]);
+    }, [hasMore, loading, onLoadMore, zoomLevel]);
 
     // Translate vertical wheel events into horizontal scroll.
     // We use an overlay positioned exactly over the scrollbar strip.
@@ -67,7 +79,34 @@ const CardHorizontalList = ({
 
     return (
         <div className="card-horizontal-wrapper">
-            <div className="card-horizontal-list" ref={listRef}>
+            <div className="card-horizontal-list-header">
+                <div className="card-horizontal-list-zoom-controls">
+                    <button
+                        className={`zoom-btn ${zoomLevel === 'small' ? 'active' : ''}`}
+                        onClick={handleZoomOut}
+                        title="Zoom Out (Visualização em 2 linhas)"
+                    >
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button
+                        className={`zoom-btn ${zoomLevel === 'normal' ? 'active' : ''}`}
+                        onClick={handleZoomIn}
+                        title="Zoom In (Visualização padrão)"
+                    >
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div className={`card-horizontal-list ${zoomLevel === 'small' ? 'card-horizontal-list--small' : ''}`} ref={listRef}>
                 {cards.map((card) => {
                     const compositeKey = `${card.id}_${card.ownerId || ownerId}`;
                     const draftItem = collectionDraft[compositeKey] || { added: 0, current: 0 };

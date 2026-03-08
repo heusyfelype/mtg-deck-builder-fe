@@ -10,11 +10,108 @@
 .card-horizontal-list {
     display: flex;
     overflow-x: auto;
+    overflow-y: hidden;
     gap: 1.5rem;
     padding: 1rem 0 2.5rem 0;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     align-items: flex-start;
+    min-height: 520px;
+}
+
+.card-horizontal-list--small {
+    display: grid;
+    grid-template-rows: repeat(2, min-content);
+    grid-auto-flow: column;
+    gap: 1.2rem;
+    min-height: auto;
+    max-height: 1100px;
+    padding-bottom: 3.5rem;
+    /* Sufficient height and room for scrollbar */
+}
+
+/* Ensure empty state and loading don't break grid */
+.card-horizontal-list--small .card-list-sentinel,
+.card-horizontal-list--small .card-list-loading-inline {
+    grid-row: 1 / span 2;
+    display: flex;
+    align-items: center;
+    min-width: 100px;
+}
+
+.card-horizontal-list-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -10px;
+    position: relative;
+    z-index: 20;
+}
+
+.card-horizontal-list-zoom-controls {
+    display: flex;
+    gap: 0.4rem;
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(4px);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zoom-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+}
+
+.zoom-btn.active {
+    color: #4a90e2;
+    background: rgba(74, 144, 226, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(74, 144, 226, 0.3);
+}
+
+/* Scaling overrides for small mode */
+.card-horizontal-list--small .card-item {
+    width: 240px;
+    padding: 10px;
+}
+
+.card-horizontal-list--small .card-item__image-container {
+    margin-bottom: 8px;
+}
+
+.card-horizontal-list--small .card-item__name {
+    font-size: 0.85rem;
+}
+
+.card-horizontal-list--small .card-item__controls {
+    padding: 0.6rem;
+    gap: 0.5rem;
+}
+
+.card-horizontal-list--small .card-item__btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
+}
+
+.card-horizontal-list--small .card-item__added-badge,
+.card-horizontal-list--small .card-item__sideboard-badge {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
 }
 
 .card-horizontal-list::-webkit-scrollbar {
