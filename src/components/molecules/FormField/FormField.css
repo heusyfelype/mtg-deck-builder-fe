@@ -1,0 +1,14 @@
+.molecule-form-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--spacing-md);
+    width: 100%;
+}
+
+.molecule-form-field__error {
+    color: var(--color-error);
+    font-size: 12px;
+    margin-top: 4px;
+    min-height: 16px;
+    /* Prevents layout shift */
+}

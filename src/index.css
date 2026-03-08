@@ -1,13 +1,56 @@
+:root {
+  /* Colors - Dark Magic Theme */
+  --color-bg-base: #0f1218;
+  --color-bg-surface: #1e232e;
+  --color-bg-surface-hover: #2a3140;
+  
+  --color-acc-primary: #5865F2; /* Modern blurple/magical blue */
+  --color-acc-primary-hover: #4752C4;
+  --color-acc-secondary: #D4AF37; /* Mythic Gold */
+  
+  --color-text-primary: #f2f3f5;
+  --color-text-secondary: #b9bbbe;
+  --color-text-muted: #8e9297;
+  
+  --color-error: #f04747;
+  
+  /* Borders */
+  --border-color: #36393f;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease-in-out;
+  --transition-normal: 0.25s ease-in-out;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Fonts */
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-family-base);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

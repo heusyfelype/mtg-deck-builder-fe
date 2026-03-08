@@ -1,0 +1,53 @@
+.view-deck-editor {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+    background-color: var(--color-bg-primary);
+    min-height: 100vh;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.view-deck-editor__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+}
+
+.view-deck-editor__header h1 {
+    font-size: 2.5rem;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.view-deck-editor__header p {
+    color: var(--color-text-secondary);
+    margin: 5px 0 0 0;
+}
+
+.view-deck-editor__header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.deck-editor-loading {
+    padding: 100px;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #666;
+    font-style: italic;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

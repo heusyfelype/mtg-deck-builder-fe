@@ -1,0 +1,101 @@
+.view-home {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--color-bg-base);
+    background-image: radial-gradient(circle at 0% 0%, rgba(88, 101, 242, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(212, 175, 55, 0.05) 0%, transparent 40%);
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.view-home__content {
+    width: 90%;
+    max-width: 1200px;
+    padding: 60px 40px;
+    background: rgba(44, 44, 44, 0.7);
+    backdrop-filter: blur(15px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.view-home__header {
+    text-align: center;
+}
+
+.view-home__title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+
+.view-home__subtitle {
+    font-size: 1.4rem;
+    color: #888;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.view-home__actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-home__decks-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.view-home__section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.view-home__section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.view-home__deck-count {
+    color: #666;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.view-home__decks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 2rem;
+    padding: 10px;
+}
+
+.view-home__decks-loading,
+.view-home__decks-empty {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-style: italic;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+}
