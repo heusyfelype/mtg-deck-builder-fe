@@ -202,57 +202,7 @@ const Home = () => {
                 </div>
 
                 <section className="view-home__decks-section">
-                    <div className="view-home__friends-toggle">
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={showFriends}
-                                onChange={(e) => setShowFriends(e.target.checked)}
-                            />{' '}
-                            Ver decks de meus amigos
-                        </label>
 
-                        {showFriends && (
-                            <div className="friends-list">
-                                {loadingFriends ? (
-                                    <div className="friends-list__loading">Carregando amigos...</div>
-                                ) : friends.length > 0 ? (
-                                    <>
-                                        <div className="friends-list__container">
-                                            {friends.slice((friendsPage - 1) * friendsPageSize, friendsPage * friendsPageSize).map(f => (
-                                                <div
-                                                    key={f.user_id}
-                                                    className="friends-list__item"
-                                                    onClick={() => handleFriendClick(f)}
-                                                >
-                                                    <span className={`friends-list__friend-badge ${selectedFriend?.user_id === f.user_id ? 'active' : ''}`}>{f.name}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="friends-list__pager">
-                                            <button
-                                                className="friends-list__pager-btn"
-                                                onClick={() => setFriendsPage(p => Math.max(1, p - 1))}
-                                                disabled={friendsPage === 1}
-                                            >
-                                                ◀
-                                            </button>
-                                            <span className="friends-list__pager-info">{friendsPage} / {Math.max(1, Math.ceil(friends.length / friendsPageSize))}</span>
-                                            <button
-                                                className="friends-list__pager-btn"
-                                                onClick={() => setFriendsPage(p => Math.min(Math.ceil(friends.length / friendsPageSize), p + 1))}
-                                                disabled={friendsPage >= Math.ceil(friends.length / friendsPageSize)}
-                                            >
-                                                ▶
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="friends-list__empty">Você não possui amigos para mostrar.</div>
-                                )}
-                            </div>
-                        )}
-                    </div>
                     <div className="view-home__section-header">
                         <h2 className="view-home__section-title">Seus Decks</h2>
                         <span className="view-home__deck-count">{userDecks.length} Decks</span>
@@ -278,12 +228,65 @@ const Home = () => {
                     )}
                 </section>
 
+                <div className="view-home__friends-toggle">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={showFriends}
+                            onChange={(e) => setShowFriends(e.target.checked)}
+                        />{' '}
+                        Ver decks de meus amigos
+                    </label>
+
+                    {showFriends && (
+                        <div className="friends-list">
+                            {loadingFriends ? (
+                                <div className="friends-list__loading">Carregando amigos...</div>
+                            ) : friends.length > 0 ? (
+                                <>
+                                    <div className="friends-list__container">
+                                        {friends.slice((friendsPage - 1) * friendsPageSize, friendsPage * friendsPageSize).map(f => (
+                                            <div
+                                                key={f.user_id}
+                                                className="friends-list__item"
+                                                onClick={() => handleFriendClick(f)}
+                                            >
+                                                <span className={`friends-list__friend-badge ${selectedFriend?.user_id === f.user_id ? 'active' : ''}`}>{f.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="friends-list__pager">
+                                        <button
+                                            className="friends-list__pager-btn"
+                                            onClick={() => setFriendsPage(p => Math.max(1, p - 1))}
+                                            disabled={friendsPage === 1}
+                                        >
+                                            ◀
+                                        </button>
+                                        <span className="friends-list__pager-info">{friendsPage} / {Math.max(1, Math.ceil(friends.length / friendsPageSize))}</span>
+                                        <button
+                                            className="friends-list__pager-btn"
+                                            onClick={() => setFriendsPage(p => Math.min(Math.ceil(friends.length / friendsPageSize), p + 1))}
+                                            disabled={friendsPage >= Math.ceil(friends.length / friendsPageSize)}
+                                        >
+                                            ▶
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="friends-list__empty">Você não possui amigos para mostrar.</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 {showFriends && selectedFriend && (
                     <section className="view-home__decks-section view-home__decks-section--friends">
                         <div className="view-home__section-header">
                             <h2 className="view-home__section-title">Decks de {selectedFriend.name}</h2>
                             <span className="view-home__deck-count">{friendDecks.length} Decks</span>
                         </div>
+
 
                         {loadingFriendDecks ? (
                             <div className="view-home__decks-loading">Carregando decks de {selectedFriend.name}...</div>

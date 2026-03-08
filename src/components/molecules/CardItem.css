@@ -21,6 +21,45 @@
     box-shadow: 0 0 15px rgba(74, 144, 226, 0.5);
 }
 
+.card-item--friend .card-item__image {
+    filter: brightness(0.6);
+}
+
+.card-item--out-of-collection {
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6) !important;
+    border: 2px solid rgba(255, 0, 0, 0.4);
+}
+
+.card-item--out-of-collection .card-item__image {
+    filter: brightness(0.6) saturate(0.8);
+}
+
+.card-item__out-of-collection-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(226, 74, 74, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 15;
+}
+
+.card-item--friend {
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.3);
+    border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.card-item--friend.card-item--selected {
+    border: 2px solid #ffa500;
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.6);
+}
+
 .card-item__image-container {
     position: relative;
     width: 100%;

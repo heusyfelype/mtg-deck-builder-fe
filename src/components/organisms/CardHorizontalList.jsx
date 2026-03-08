@@ -13,7 +13,9 @@ const CardHorizontalList = ({
     loading,
     hasMore,
     onLoadMore,
-    onImageClick
+    onImageClick,
+    ownerId,
+    isFriendList = false
 }) => {
     // Ref for the scrollable list container (used for wheel-on-scrollbar detection)
     const listRef = useRef(null);
@@ -67,8 +69,9 @@ const CardHorizontalList = ({
         <div className="card-horizontal-wrapper">
             <div className="card-horizontal-list" ref={listRef}>
                 {cards.map((card) => {
-                    const draftItem = collectionDraft[card.id] || { added: 0, current: 0 };
-                    const sideboardItem = sideboardDraft[card.id] || { added: 0 };
+                    const compositeKey = `${card.id}_${card.ownerId || ownerId}`;
+                    const draftItem = collectionDraft[compositeKey] || { added: 0, current: 0 };
+                    const sideboardItem = sideboardDraft[compositeKey] || { added: 0 };
                     const stock = typeof card.maxQuantity === 'number'
                         ? card.maxQuantity - (draftItem.added + sideboardItem.added)
                         : undefined;
@@ -86,6 +89,8 @@ const CardHorizontalList = ({
                             onAddSideboard={onAddSideboard}
                             onRemoveSideboard={onRemoveSideboard}
                             onImageClick={onImageClick}
+                            isFriendCard={isFriendList}
+                            isOutOfCollection={card.ownerId === 'out_of_collection' || ownerId === 'out_of_collection'}
                         />
                     );
                 })}

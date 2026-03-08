@@ -11,7 +11,9 @@ const CardItem = ({
     onRemove,
     onAddSideboard,
     onRemoveSideboard,
-    onImageClick
+    onImageClick,
+    isFriendCard = false,
+    isOutOfCollection = false
 }) => {
     // Priority: large > png > normal > small
     const getImageUri = (imageUris) => {
@@ -23,7 +25,7 @@ const CardItem = ({
     const isSelected = addedCount > 0;
 
     return (
-        <div className={`card-item ${isSelected ? 'card-item--selected' : ''}`}>
+        <div className={`card-item ${isSelected ? 'card-item--selected' : ''} ${isFriendCard ? 'card-item--friend' : ''} ${isOutOfCollection ? 'card-item--out-of-collection' : ''}`}>
             <div
                 className="card-item__image-container"
                 onClick={() => onImageClick && onImageClick(card)}
@@ -45,6 +47,12 @@ const CardItem = ({
                 {typeof stock === 'number' && (
                     <div className="card-item__stock-badge">
                         Disp: {stock}
+                    </div>
+                )}
+
+                {isOutOfCollection && (
+                    <div className="card-item__out-of-collection-badge">
+                        Fora da coleção
                     </div>
                 )}
             </div>

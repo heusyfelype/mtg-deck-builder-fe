@@ -70,11 +70,19 @@ const DeckEditor = () => {
                 const deck = result.data;
                 setOriginalDeck(deck);
 
+                const currentUserId = JSON.parse(localStorage.getItem('mtg_user'))?.id || JSON.parse(localStorage.getItem('mtg_user'))?._id;
+
                 // If no local draft exists, initialize from backend
                 if (deckDraft === null) {
                     const initialDraft = {};
                     deck.cards.forEach(item => {
-                        initialDraft[item.card.id] = { added: item.quantity, card: item.card };
+                        const ownerId = item.ownerId || deck.userId;
+                        const compositeKey = `${item.card.id}_${ownerId}`;
+                        initialDraft[compositeKey] = {
+                            added: item.quantity,
+                            card: item.card,
+                            ownerId
+                        };
                     });
                     setDeckDraft(initialDraft);
                 }
@@ -83,7 +91,13 @@ const DeckEditor = () => {
                     const initialSideboard = {};
                     if (deck.sideboard) {
                         deck.sideboard.forEach(item => {
-                            initialSideboard[item.card.id] = { added: item.quantity, card: item.card };
+                            const ownerId = item.ownerId || deck.userId;
+                            const compositeKey = `${item.card.id}_${ownerId}`;
+                            initialSideboard[compositeKey] = {
+                                added: item.quantity,
+                                card: item.card,
+                                ownerId
+                            };
                         });
                     }
                     setSideboardDraft(initialSideboard);
@@ -124,7 +138,8 @@ const DeckEditor = () => {
             if (result.success && result.data && result.data.cards) {
                 const cardsWithStock = result.data.cards.map(item => ({
                     ...item.card,
-                    maxQuantity: item.quantity
+                    maxQuantity: item.quantity,
+                    ownerId: userId
                 }));
                 setUserCollection(cardsWithStock);
             }
@@ -132,6 +147,140 @@ const DeckEditor = () => {
             console.error('Error fetching user collection:', error);
         }
     }, [navigate]);
+
+    // Friends list and collection logic
+    const [showFriends, setShowFriends] = useState(false);
+    const [friends, setFriends] = useState([]);
+    const [selectedFriend, setSelectedFriend] = useState(null);
+    const [friendCollection, setFriendCollection] = useState([]);
+    const [loadingFriends, setLoadingFriends] = useState(false);
+    const [loadingFriendCollection, setLoadingFriendCollection] = useState(false);
+    const [friendsPage, setFriendsPage] = useState(1);
+    const friendsPerPage = 6;
+
+    // All Cards (Out of Collection) state
+    const [showAllCards, setShowAllCards] = useState(false);
+    const [allCards, setAllCards] = useState([]);
+    const [loadingAllCards, setLoadingAllCards] = useState(false);
+    const [allCardsPage, setAllCardsPage] = useState(1);
+    const allCardsPerPage = 20;
+
+    const fetchAllCards = useCallback(async (filters, page = 1) => {
+        setLoadingAllCards(true);
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const queryParams = new URLSearchParams();
+            if (filters.printed_name) queryParams.append('printed_name', filters.printed_name);
+            if (filters.colors && filters.colors.length > 0) {
+                const colorsArr = Array.isArray(filters.colors) ? filters.colors : [filters.colors];
+                colorsArr.forEach(c => queryParams.append('colors[]', c));
+            }
+            if (filters.type_line) queryParams.append('type_line', filters.type_line);
+            if (filters.set_name) queryParams.append('set_name', filters.set_name);
+            if (filters.cmc) queryParams.append('cmc', filters.cmc);
+            queryParams.append('page', page.toString());
+            queryParams.append('perPage', allCardsPerPage.toString());
+
+            const response = await fetch(`${apiBase}/cards?${queryParams.toString()}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const newCards = result.data.cards.map(card => ({
+                    ...card,
+                    ownerId: 'out_of_collection',
+                    maxQuantity: 4
+                }));
+
+                if (page === 1) {
+                    setAllCards(newCards);
+                } else {
+                    setAllCards(prev => [...prev, ...newCards]);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching all cards:', error);
+        } finally {
+            setLoadingAllCards(false);
+        }
+    }, [allCardsPerPage]);
+
+    useEffect(() => {
+        if (showAllCards) {
+            fetchAllCards(currentFilters, 1);
+            setAllCardsPage(1);
+        }
+    }, [showAllCards, currentFilters, fetchAllCards]);
+
+    const fetchFriends = useCallback(async () => {
+        const savedUser = localStorage.getItem('mtg_user');
+        const user = savedUser ? JSON.parse(savedUser) : null;
+        const userId = user?.id || user?._id;
+        const token = localStorage.getItem('mtg_token');
+
+        if (!userId) return;
+
+        setLoadingFriends(true);
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/friends/${userId}`, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                setFriends(result.data || []);
+                setFriendsPage(1);
+            }
+        } catch (error) {
+            console.error('Error fetching friends:', error);
+        } finally {
+            setLoadingFriends(false);
+        }
+    }, []);
+
+    const fetchFriendCollection = async (friendId) => {
+        setLoadingFriendCollection(true);
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const token = localStorage.getItem('mtg_token');
+            const response = await fetch(`${apiBase}/cards-by-user/${friendId}`, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            });
+            const result = await response.json();
+            if (result.success && result.data && result.data.cards) {
+                const cardsWithStock = result.data.cards.map(item => ({
+                    ...item.card,
+                    maxQuantity: item.quantity,
+                    ownerId: friendId
+                }));
+                setFriendCollection(cardsWithStock);
+            }
+        } catch (error) {
+            console.error('Error fetching friend collection:', error);
+        } finally {
+            setLoadingFriendCollection(false);
+        }
+    };
+
+    useEffect(() => {
+        if (friends.length === 0) {
+            fetchFriends();
+        }
+    }, [friends.length, fetchFriends]);
+
+    const handleFriendClick = (friend) => {
+        if (selectedFriend?.user_id === friend.user_id) {
+            setSelectedFriend(null);
+            setFriendCollection([]);
+        } else {
+            setSelectedFriend(friend);
+            fetchFriendCollection(friend.user_id);
+        }
+    };
 
     useEffect(() => {
         fetchDeckData();
@@ -158,59 +307,173 @@ const DeckEditor = () => {
     const handleSearch = (filters) => setCurrentFilters(filters);
 
     const handleAddCard = (card) => {
+        const ownerId = card.ownerId || JSON.parse(localStorage.getItem('mtg_user'))?.id || JSON.parse(localStorage.getItem('mtg_user'))?._id;
+        const compositeKey = `${card.id}_${ownerId}`;
         setDeckDraft(prev => {
             const currentDraft = prev || {};
-            const existing = currentDraft[card.id] || { added: 0, card };
-            const inSideboard = (sideboardDraft && sideboardDraft[card.id]?.added) || 0;
-            if (existing.added + inSideboard >= card.maxQuantity) {
-                alert(`Você só possui ${card.maxQuantity} cópias deste card na sua coleção.`);
+            const existing = currentDraft[compositeKey] || { added: 0, card, ownerId };
+            const inSideboard = (sideboardDraft && sideboardDraft[compositeKey]?.added) || 0;
+            const maxQ = card.maxQuantity || 4;
+            if (existing.added + inSideboard >= maxQ) {
+                alert(ownerId === 'out_of_collection'
+                    ? `Limite de 4 cópias atingido para este card.`
+                    : `Este proprietário só possui ${maxQ} cópias deste card.`);
                 return currentDraft;
             }
-            return { ...currentDraft, [card.id]: { ...existing, added: existing.added + 1 } };
+            return { ...currentDraft, [compositeKey]: { ...existing, added: existing.added + 1 } };
         });
     };
 
     const handleRemoveCard = (card) => {
+        const ownerId = card.ownerId;
+        const compositeKey = `${card.id}_${ownerId}`;
         setDeckDraft(prev => {
             if (!prev) return null;
-            const existing = prev[card.id];
+            const existing = prev[compositeKey];
             if (!existing || existing.added <= 0) return prev;
             const newAdded = existing.added - 1;
             if (newAdded === 0) {
                 const newState = { ...prev };
-                delete newState[card.id];
+                delete newState[compositeKey];
                 return newState;
             }
-            return { ...prev, [card.id]: { ...existing, added: newAdded } };
+            return { ...prev, [compositeKey]: { ...existing, added: newAdded } };
         });
     };
 
     const handleAddSideboard = (card) => {
+        const ownerId = card.ownerId || JSON.parse(localStorage.getItem('mtg_user'))?.id || JSON.parse(localStorage.getItem('mtg_user'))?._id;
+        const compositeKey = `${card.id}_${ownerId}`;
         setSideboardDraft(prev => {
             const currentSideboard = prev || {};
-            const existing = currentSideboard[card.id] || { added: 0, card };
-            const inMain = (deckDraft && deckDraft[card.id]?.added) || 0;
-            if (existing.added + inMain >= card.maxQuantity) {
-                alert(`Você só possui ${card.maxQuantity} cópias deste card na sua coleção.`);
+            const existing = currentSideboard[compositeKey] || { added: 0, card, ownerId };
+            const inMain = (deckDraft && deckDraft[compositeKey]?.added) || 0;
+            const maxQ = card.maxQuantity || 4;
+            if (existing.added + inMain >= maxQ) {
+                alert(ownerId === 'out_of_collection'
+                    ? `Limite de 4 cópias atingido para este card.`
+                    : `Este proprietário só possui ${maxQ} cópias deste card.`);
                 return currentSideboard;
             }
-            return { ...currentSideboard, [card.id]: { ...existing, added: existing.added + 1 } };
+            return { ...currentSideboard, [compositeKey]: { ...existing, added: existing.added + 1 } };
         });
     };
 
     const handleRemoveSideboard = (card) => {
+        const ownerId = card.ownerId;
+        const compositeKey = `${card.id}_${ownerId}`;
         setSideboardDraft(prev => {
             if (!prev) return null;
-            const existing = prev[card.id];
+            const existing = prev[compositeKey];
             if (!existing || existing.added <= 0) return prev;
             const newAdded = existing.added - 1;
             if (newAdded === 0) {
                 const newState = { ...prev };
-                delete newState[card.id];
+                delete newState[compositeKey];
                 return newState;
             }
-            return { ...prev, [card.id]: { ...existing, added: newAdded } };
+            return { ...prev, [compositeKey]: { ...existing, added: newAdded } };
         });
+    };
+
+    const handleAddToCollection = async (selectedItems) => {
+        const savedUser = localStorage.getItem('mtg_user');
+        const token = localStorage.getItem('mtg_token');
+        if (!savedUser || !token) return;
+
+        const user = JSON.parse(savedUser);
+        const userId = user.id || user._id;
+
+        // 1. Prepare backend payload
+        const updates = selectedItems.map(item => {
+            const existing = userCollection.find(c => c.id === item.card.id);
+            const currentQty = existing ? existing.maxQuantity : 0;
+            return {
+                cardId: item.card.id,
+                quantity: currentQty + item.added
+            };
+        });
+
+        const payload = [
+            {
+                userId,
+                cards: updates
+            }
+        ];
+
+        setLoading(true);
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/cards-by-user`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // 2. Update local deck state migration
+                setDeckDraft(prev => {
+                    const next = { ...prev };
+                    selectedItems.forEach(item => {
+                        const oldKey = `${item.card.id}_out_of_collection`;
+                        if (next[oldKey]) {
+                            const newKey = `${item.card.id}_${userId}`;
+                            if (next[newKey]) {
+                                next[newKey] = {
+                                    ...next[newKey],
+                                    added: next[newKey].added + next[oldKey].added
+                                };
+                            } else {
+                                next[newKey] = {
+                                    ...next[oldKey],
+                                    ownerId: userId
+                                };
+                            }
+                            delete next[oldKey];
+                        }
+                    });
+                    return next;
+                });
+
+                setSideboardDraft(prev => {
+                    const next = { ...prev };
+                    selectedItems.forEach(item => {
+                        const oldKey = `${item.card.id}_out_of_collection`;
+                        if (next[oldKey]) {
+                            const newKey = `${item.card.id}_${userId}`;
+                            if (next[newKey]) {
+                                next[newKey] = {
+                                    ...next[newKey],
+                                    added: next[newKey].added + next[oldKey].added
+                                };
+                            } else {
+                                next[newKey] = {
+                                    ...next[oldKey],
+                                    ownerId: userId
+                                };
+                            }
+                            delete next[oldKey];
+                        }
+                    });
+                    return next;
+                });
+
+                // 3. Refetch collection
+                fetchUserCollection();
+                alert('Cards adicionados à sua coleção com sucesso!');
+            } else {
+                alert(`Erro ao adicionar à coleção: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error adding to collection:', error);
+            alert('Erro de conexão ao adicionar à coleção.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSaveEdits = async () => {
@@ -225,8 +488,16 @@ const DeckEditor = () => {
             _id: deckId, // Include deckId for updates
             userId,
             deckName,
-            cards: Object.values(deckDraft || {}).map(i => ({ quantity: i.added.toString(), cardId: i.card.id })),
-            sideborad: Object.values(sideboardDraft || {}).map(i => ({ quantity: i.added.toString(), cardId: i.card.id }))
+            cards: Object.values(deckDraft || {}).map(i => ({
+                quantity: i.added.toString(),
+                cardId: i.card.id,
+                ownerId: i.ownerId
+            })),
+            sideborad: Object.values(sideboardDraft || {}).map(i => ({
+                quantity: i.added.toString(),
+                cardId: i.card.id,
+                ownerId: i.ownerId
+            }))
         }];
 
         try {
@@ -277,8 +548,16 @@ const DeckEditor = () => {
         const payload = [{
             userId,
             deckName: `${deckName} (Cópia)`,
-            cards: Object.values(deckDraft || {}).map(i => ({ quantity: i.added.toString(), cardId: i.card.id })),
-            sideborad: Object.values(sideboardDraft || {}).map(i => ({ quantity: i.added.toString(), cardId: i.card.id }))
+            cards: Object.values(deckDraft || {}).map(i => ({
+                quantity: i.added.toString(),
+                cardId: i.card.id,
+                ownerId: i.ownerId
+            })),
+            sideborad: Object.values(sideboardDraft || {}).map(i => ({
+                quantity: i.added.toString(),
+                cardId: i.card.id,
+                ownerId: i.ownerId
+            }))
         }];
 
         try {
@@ -304,7 +583,9 @@ const DeckEditor = () => {
     const totalAdded = totalMain + totalSide;
 
     return (
+
         <div className="view-deck-editor">
+
             <div className="view-deck-editor__header">
                 <div>
                     <h1>{isReadOnly ? `Visualizando Deck: ${originalDeck?.deckName}` : `Editando Deck: ${originalDeck?.deckName}`}</h1>
@@ -332,23 +613,167 @@ const DeckEditor = () => {
 
             <div className="view-deck-editor__content">
                 {!isReadOnly && (
-                    loading && userCollection.length === 0 ? (
-                        <div className="deck-editor-loading">Carregando dados...</div>
-                    ) : (
-                        <CardHorizontalList
-                            cards={filteredCards}
-                            collectionDraft={deckDraft || {}}
-                            sideboardDraft={sideboardDraft || {}}
-                            onAddCard={handleAddCard}
-                            onRemoveCard={handleRemoveCard}
-                            onAddSideboard={handleAddSideboard}
-                            onRemoveSideboard={handleRemoveSideboard}
-                            onImageClick={setZoomedCard}
-                            loading={loading}
-                            hasMore={false}
-                            onLoadMore={() => { }}
+                    <section className="deck-editor-section">
+                        <h3>Minha Coleção</h3>
+                        {loading && userCollection.length === 0 ? (
+                            <div className="deck-editor-loading">Carregando sua coleção...</div>
+                        ) : (
+                            <CardHorizontalList
+                                cards={filteredCards}
+                                collectionDraft={deckDraft || {}}
+                                sideboardDraft={sideboardDraft || {}}
+                                onAddCard={handleAddCard}
+                                onRemoveCard={handleRemoveCard}
+                                onAddSideboard={handleAddSideboard}
+                                onRemoveSideboard={handleRemoveSideboard}
+                                onImageClick={setZoomedCard}
+                                loading={loading}
+                                hasMore={false}
+                                onLoadMore={() => { }}
+                                ownerId={JSON.parse(localStorage.getItem('mtg_user'))?.id || JSON.parse(localStorage.getItem('mtg_user'))?._id}
+                            />
+                        )}
+                    </section>
+                )}
+
+                {!isReadOnly && (
+                    <div className="view-home__friends-toggle view-deck-editor__friends-toggle">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={showFriends}
+                                onChange={(e) => setShowFriends(e.target.checked)}
+                            />
+                            Ver cards de meus amigos
+                        </label>
+
+                        {showFriends && (
+                            <div className="friends-list">
+                                {loadingFriends ? (
+                                    <div className="friends-list__loading">Carregando amigos...</div>
+                                ) : friends.length > 0 ? (
+                                    <>
+                                        <div className="friends-list__container">
+                                            {friends.slice((friendsPage - 1) * friendsPerPage, friendsPage * friendsPerPage).map(f => (
+                                                <div
+                                                    key={f.user_id}
+                                                    className="friends-list__item"
+                                                    onClick={() => handleFriendClick(f)}
+                                                >
+                                                    <span className={`friends-list__friend-badge ${selectedFriend?.user_id === f.user_id ? 'active' : ''}`}>
+                                                        {f.name}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="friends-list__pager">
+                                            <button
+                                                className="friends-list__pager-btn"
+                                                onClick={() => setFriendsPage(p => Math.max(1, p - 1))}
+                                                disabled={friendsPage === 1}
+                                            >
+                                                ◀
+                                            </button>
+                                            <span className="friends-list__pager-info">
+                                                {friendsPage} / {Math.max(1, Math.ceil(friends.length / friendsPerPage))}
+                                            </span>
+                                            <button
+                                                className="friends-list__pager-btn"
+                                                onClick={() => setFriendsPage(p => Math.min(Math.ceil(friends.length / friendsPerPage), p + 1))}
+                                                disabled={friendsPage >= Math.ceil(friends.length / friendsPerPage)}
+                                            >
+                                                ▶
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="friends-list__empty">Nenhum amigo encontrado.</div>
+                                )}
+                            </div>
+                        )}
+
+                    </div>
+                )}
+
+                {showFriends && selectedFriend && !isReadOnly && (
+                    <section className="deck-editor-section deck-editor-section--friend">
+                        <h3>Coleção de {selectedFriend.name}</h3>
+                        {loadingFriendCollection ? (
+                            <div className="deck-editor-loading">Carregando coleção de {selectedFriend.name}...</div>
+                        ) : friendCollection.length === 0 ? (
+                            <div className="deck-editor-empty">Este amigo não possui cards na coleção.</div>
+                        ) : (
+                            <CardHorizontalList
+                                cards={friendCollection.filter(card => {
+                                    // Apply same filters to friend collection
+                                    if (currentFilters.printed_name && !card.name?.toLowerCase().includes(currentFilters.printed_name.toLowerCase())) {
+                                        if (!card.printed_name?.toLowerCase().includes(currentFilters.printed_name.toLowerCase())) return false;
+                                    }
+                                    if (currentFilters.colors && currentFilters.colors.length > 0) {
+                                        const colorsArr = Array.isArray(currentFilters.colors) ? currentFilters.colors : [currentFilters.colors];
+                                        if (!colorsArr.every(c => card.color_identity?.includes(c))) return false;
+                                    }
+                                    if (currentFilters.type_line && !card.type_line?.toLowerCase().includes(currentFilters.type_line.toLowerCase())) return false;
+                                    if (currentFilters.set_name && !card.set_name?.toLowerCase().includes(currentFilters.set_name.toLowerCase())) return false;
+                                    if (currentFilters.cmc && card.cmc !== Number(currentFilters.cmc)) return false;
+                                    return true;
+                                })}
+                                collectionDraft={deckDraft || {}}
+                                sideboardDraft={sideboardDraft || {}}
+                                onAddCard={handleAddCard}
+                                onRemoveCard={handleRemoveCard}
+                                onAddSideboard={handleAddSideboard}
+                                onRemoveSideboard={handleRemoveSideboard}
+                                onImageClick={setZoomedCard}
+                                loading={false}
+                                hasMore={false}
+                                onLoadMore={() => { }}
+                                ownerId={selectedFriend.user_id}
+                                isFriendList={true}
+                            />
+                        )}
+                    </section>
+                )}
+
+                {!isReadOnly && (<div className="view-home__friends-toggle view-deck-editor__all-cards-toggle" style={{ marginTop: '10px' }}>
+                    <label className="view-deck-builder__all-cards-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={showAllCards}
+                            onChange={(e) => setShowAllCards(e.target.checked)}
                         />
-                    )
+                        Adicionar cards que não estão na coleção
+                    </label>
+                </div>)}
+
+                {showAllCards && !isReadOnly && (
+                    <section className="deck-editor-section deck-editor-section--all-cards">
+                        <h3>Cards fora da coleção</h3>
+                        {loadingAllCards && allCards.length === 0 ? (
+                            <div className="deck-editor-loading">Buscando cards na base global...</div>
+                        ) : allCards.length === 0 ? (
+                            <div className="deck-editor-empty">Nenhum card encontrado na base global com estes filtros.</div>
+                        ) : (
+                            <CardHorizontalList
+                                cards={allCards}
+                                collectionDraft={deckDraft || {}}
+                                sideboardDraft={sideboardDraft || {}}
+                                onAddCard={handleAddCard}
+                                onRemoveCard={handleRemoveCard}
+                                onAddSideboard={handleAddSideboard}
+                                onRemoveSideboard={handleRemoveSideboard}
+                                loading={loadingAllCards}
+                                hasMore={true}
+                                onLoadMore={() => {
+                                    const nextPage = allCardsPage + 1;
+                                    setAllCardsPage(nextPage);
+                                    fetchAllCards(currentFilters, nextPage);
+                                }}
+                                onImageClick={setZoomedCard}
+                                ownerId="out_of_collection"
+                            />
+                        )}
+                    </section>
                 )}
             </div>
 
@@ -364,7 +789,9 @@ const DeckEditor = () => {
                 onImageClick={setZoomedCard}
                 onClear={handleClearDeck}
                 onCancelEdit={() => handleCancelEdit(false)}
+                onAddToCollection={handleAddToCollection}
                 readOnly={isReadOnly}
+                friends={friends}
             />
 
             <CardPreviewModal

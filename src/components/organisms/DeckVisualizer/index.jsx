@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import './DeckVisualizer.css';
+import AddOutOfCollectionModal from '../../molecules/AddOutOfCollectionModal';
 
 const DeckVisualizer = ({
     deckDraft,
@@ -13,9 +14,12 @@ const DeckVisualizer = ({
     onImageClick,
     onClear,
     onCancelEdit,
-    readOnly = false
+    onAddToCollection,
+    readOnly = false,
+    friends = []
 }) => {
     const [modalConfig, setModalConfig] = useState(null); // { type: 'clear' | 'cancel', message: string, onConfirm: () => void }
+    const [isAddCollectionOpen, setIsAddCollectionOpen] = useState(false);
 
     // Helper to group cards by CMC
     const getGroupedCards = (draft) => {
@@ -25,15 +29,31 @@ const DeckVisualizer = ({
             if (!groups[cmc]) {
                 groups[cmc] = [];
             }
+            const currentUserId = JSON.parse(localStorage.getItem('mtg_user'))?.id || JSON.parse(localStorage.getItem('mtg_user'))?._id;
+            const isFriendCard = item.ownerId && item.ownerId !== currentUserId && item.ownerId !== 'out_of_collection';
+            const isOutOfCollection = item.ownerId === 'out_of_collection';
+            const ownerName = isFriendCard ? friends.find(f => f.user_id === item.ownerId)?.name : null;
+
             for (let i = 0; i < item.added; i++) {
-                groups[cmc].push(item.card);
+                groups[cmc].push({
+                    ...item.card,
+                    isFriendCard,
+                    isOutOfCollection,
+                    ownerName
+                });
             }
         });
         return groups;
     };
 
-    const groupedMain = useMemo(() => getGroupedCards(deckDraft), [deckDraft]);
-    const groupedSideboard = useMemo(() => getGroupedCards(sideboardDraft), [sideboardDraft]);
+    const groupedMain = useMemo(() => getGroupedCards(deckDraft), [deckDraft, friends]);
+    const groupedSideboard = useMemo(() => getGroupedCards(sideboardDraft), [sideboardDraft, friends]);
+
+    const outOfCollectionCards = useMemo(() => {
+        const outMain = Object.values(deckDraft).filter(item => item.ownerId === 'out_of_collection');
+        const outSide = Object.values(sideboardDraft).filter(item => item.ownerId === 'out_of_collection');
+        return [...outMain, ...outSide];
+    }, [deckDraft, sideboardDraft]);
 
     const getSortedCMCs = (groups) => {
         return Object.keys(groups)
@@ -63,7 +83,7 @@ const DeckVisualizer = ({
                         {groupedCards[cmc].map((card, index) => (
                             <div
                                 key={`${card.id}-${index}`}
-                                className="deck-visualizer__card-tile"
+                                className={`deck-visualizer__card-tile ${card.isFriendCard ? 'deck-visualizer__card-tile--friend' : ''} ${card.isOutOfCollection ? 'deck-visualizer__card-tile--out-of-collection' : ''}`}
                                 onDoubleClick={() => onImageClick && onImageClick(card)}
                                 style={{
                                     top: `${index * 30}px`,
@@ -78,6 +98,16 @@ const DeckVisualizer = ({
                                         className="deck-visualizer__card-image"
                                     />
                                     <div className="deck-visualizer__card-overlay">
+                                        {card.isFriendCard && card.ownerName && (
+                                            <div className="deck-visualizer__friend-owner">
+                                                De: {card.ownerName}
+                                            </div>
+                                        )}
+                                        {card.isOutOfCollection && (
+                                            <div className="deck-visualizer__out-of-collection-owner">
+                                                De: fora da coleção
+                                            </div>
+                                        )}
                                         <span className="deck-visualizer__card-name">{card.name}</span>
                                         {!readOnly && (
                                             <div className="deck-visualizer__card-actions">
@@ -107,6 +137,14 @@ const DeckVisualizer = ({
                     disabled={readOnly}
                 />
                 <div className="deck-visualizer__header-actions">
+                    {outOfCollectionCards.length > 0 && !readOnly && (
+                        <button
+                            className="deck-visualizer__add-collection-btn"
+                            onClick={() => setIsAddCollectionOpen(true)}
+                        >
+                            Adicionar cards de fora à coleção
+                        </button>
+                    )}
                     {!readOnly && (
                         <button
                             className="deck-visualizer__clear-btn"
@@ -176,6 +214,16 @@ const DeckVisualizer = ({
                     </div>
                 </div>
             )}
+
+            <AddOutOfCollectionModal
+                isOpen={isAddCollectionOpen}
+                onClose={() => setIsAddCollectionOpen(false)}
+                outOfCollectionCards={outOfCollectionCards}
+                onSave={(selected) => {
+                    onAddToCollection(selected);
+                    setIsAddCollectionOpen(false);
+                }}
+            />
         </div>
     );
 };
