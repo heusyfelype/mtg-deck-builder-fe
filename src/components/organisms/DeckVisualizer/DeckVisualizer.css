@@ -85,6 +85,7 @@
     overflow-x: auto;
     padding-bottom: 2rem;
     min-height: 500px;
+    height: fit-content;
     align-items: flex-start;
 }
 

@@ -2,12 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/atoms/Button';
 import DeckBox from '../../components/molecules/DeckBox';
+import ConfirmModal from '../../components/molecules/ConfirmModal';
 import './Home.css';
 
 const Home = () => {
     const navigate = useNavigate();
     const [userDecks, setUserDecks] = useState([]);
     const [loadingDecks, setLoadingDecks] = useState(false);
+
+    // Delete states
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deckToDelete, setDeckToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchDecks = useCallback(async () => {
         const savedUser = localStorage.getItem('mtg_user');
@@ -47,6 +53,50 @@ const Home = () => {
         navigate('/login');
     };
 
+    const openDeleteModal = (deck) => {
+        setDeckToDelete(deck);
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setDeckToDelete(null);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deckToDelete) return;
+
+        const token = localStorage.getItem('mtg_token');
+        setIsDeleting(true);
+
+        try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const response = await fetch(`${apiBase}/decks-by-user`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ ids: deckToDelete._id })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Refresh decks after deletion
+                await fetchDecks();
+                closeDeleteModal();
+            } else {
+                alert('Erro ao excluir deck: ' + (result.message || 'Desconhecido'));
+            }
+        } catch (error) {
+            console.error('Error deleting deck:', error);
+            alert('Erro de conexão ao excluir deck');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div className="view-home">
             <div className="view-home__content">
@@ -82,6 +132,7 @@ const Home = () => {
                                     key={deck._id || index}
                                     deck={deck}
                                     onClick={() => navigate(`/deck-editor/${deck._id || index}`)}
+                                    onDelete={openDeleteModal}
                                 />
                             ))}
                         </div>
@@ -92,6 +143,14 @@ const Home = () => {
                     )}
                 </section>
             </div>
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={handleDeleteConfirm}
+                title="Excluir Deck"
+                message={`O deck ${deckToDelete?.deckName} será excluído. Deseja continuar?`}
+            />
         </div>
     );
 };

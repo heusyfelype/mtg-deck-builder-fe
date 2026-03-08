@@ -1,0 +1,86 @@
+.confirm-modal__backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    padding: 20px;
+}
+
+.confirm-modal__content {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.confirm-modal__header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confirm-modal__title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.confirm-modal__close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+    padding: 0;
+}
+
+.confirm-modal__close:hover {
+    color: #fff;
+}
+
+.confirm-modal__body {
+    padding: 24px;
+}
+
+.confirm-modal__message {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.confirm-modal__footer {
+    padding: 20px 24px;
+    background-color: rgba(255, 255, 255, 0.02);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
