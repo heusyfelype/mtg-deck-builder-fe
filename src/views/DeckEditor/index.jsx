@@ -163,6 +163,7 @@ const DeckEditor = () => {
     const [allCards, setAllCards] = useState([]);
     const [loadingAllCards, setLoadingAllCards] = useState(false);
     const [allCardsPage, setAllCardsPage] = useState(1);
+    const [hasMoreAllCards, setHasMoreAllCards] = useState(true);
     const allCardsPerPage = 20;
 
     const fetchAllCards = useCallback(async (filters, page = 1) => {
@@ -184,7 +185,7 @@ const DeckEditor = () => {
             const response = await fetch(`${apiBase}/cards?${queryParams.toString()}`);
             const result = await response.json();
 
-            if (result.success && result.data) {
+            if (result.success && result.data && result.data.cards) {
                 const newCards = result.data.cards.map(card => ({
                     ...card,
                     ownerId: 'out_of_collection',
@@ -196,6 +197,14 @@ const DeckEditor = () => {
                 } else {
                     setAllCards(prev => [...prev, ...newCards]);
                 }
+
+                if (newCards.length < allCardsPerPage) {
+                    setHasMoreAllCards(false);
+                } else {
+                    setHasMoreAllCards(true);
+                }
+            } else {
+                setHasMoreAllCards(false);
             }
         } catch (error) {
             console.error('Error fetching all cards:', error);
@@ -763,8 +772,9 @@ const DeckEditor = () => {
                                 onAddSideboard={handleAddSideboard}
                                 onRemoveSideboard={handleRemoveSideboard}
                                 loading={loadingAllCards}
-                                hasMore={true}
+                                hasMore={hasMoreAllCards}
                                 onLoadMore={() => {
+                                    if (loadingAllCards || !hasMoreAllCards) return;
                                     const nextPage = allCardsPage + 1;
                                     setAllCardsPage(nextPage);
                                     fetchAllCards(currentFilters, nextPage);

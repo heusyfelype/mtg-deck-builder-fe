@@ -110,6 +110,7 @@ const DeckBuilder = () => {
     const [allCards, setAllCards] = useState([]);
     const [loadingAllCards, setLoadingAllCards] = useState(false);
     const [allCardsPage, setAllCardsPage] = useState(1);
+    const [hasMoreAllCards, setHasMoreAllCards] = useState(true);
     const allCardsPerPage = 20; // More cards for global search
 
     const fetchFriends = useCallback(async () => {
@@ -221,6 +222,15 @@ const DeckBuilder = () => {
                 } else {
                     setAllCards(prev => [...prev, ...cardsWithOwner]);
                 }
+
+                // If we got fewer results than the page size, we're at the end
+                if (cardsWithOwner.length < allCardsPerPage) {
+                    setHasMoreAllCards(false);
+                } else {
+                    setHasMoreAllCards(true);
+                }
+            } else {
+                setHasMoreAllCards(false);
             }
         } catch (error) {
             console.error('Error fetching all cards:', error);
@@ -674,8 +684,9 @@ const DeckBuilder = () => {
                                 onAddSideboard={handleAddSideboard}
                                 onRemoveSideboard={handleRemoveSideboard}
                                 loading={loadingAllCards}
-                                hasMore={true}
+                                hasMore={hasMoreAllCards}
                                 onLoadMore={() => {
+                                    if (loadingAllCards || !hasMoreAllCards) return;
                                     const nextPage = allCardsPage + 1;
                                     setAllCardsPage(nextPage);
                                     fetchAllCards(currentFilters, nextPage);
