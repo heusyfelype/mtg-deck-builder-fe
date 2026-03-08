@@ -1,19 +1,13 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import FormField from '../../components/molecules/FormField';
-import Button from '../../components/atoms/Button';
-import TextLink from '../../components/atoms/TextLink';
 import './Login.css';
 
 const Login = () => {
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            console.log("api base: ", apiBase)
             const res = await fetch(`${apiBase}/auth/google`, {
                 method: 'POST',
                 headers: {
@@ -35,12 +29,6 @@ const Login = () => {
             console.error('Erro na requisição de login:', error);
             alert('Erro de comunicação com o servidor. Tente novamente mais tarde.');
         }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('Login attempt:', { email, password });
-        // TODO: implement actual local login logic
     };
 
     return (
