@@ -26,7 +26,7 @@ const Home = () => {
         setLoadingDecks(true);
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
-            const response = await fetch(`${apiBase}/decks-by-user/${userId}`, {
+            const response = await fetch(`${apiBase}/decks-by-user/simplified/${userId}`, {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})
                 }
@@ -77,7 +77,7 @@ const Home = () => {
                     'Content-Type': 'application/json',
                     ...(token ? { Authorization: `Bearer ${token}` } : {})
                 },
-                body: JSON.stringify({ ids: deckToDelete._id })
+                body: JSON.stringify({ ids: deckToDelete.deck_by_user_id })
             });
 
             const result = await response.json();
@@ -129,9 +129,9 @@ const Home = () => {
                         <div className="view-home__decks-grid">
                             {userDecks.map((deck, index) => (
                                 <DeckBox
-                                    key={deck._id || index}
+                                    key={deck.deck_by_user_id || index}
                                     deck={deck}
-                                    onClick={() => navigate(`/deck-editor/${deck._id || index}`)}
+                                    onClick={() => navigate(`/deck-editor/${deck.deck_by_user_id || index}`)}
                                     onDelete={openDeleteModal}
                                 />
                             ))}
@@ -149,7 +149,7 @@ const Home = () => {
                 onClose={closeDeleteModal}
                 onConfirm={handleDeleteConfirm}
                 title="Excluir Deck"
-                message={`O deck ${deckToDelete?.deckName} será excluído. Deseja continuar?`}
+                message={`O deck ${deckToDelete?.deck_name || deckToDelete?.deckName} será excluído. Deseja continuar?`}
             />
         </div>
     );

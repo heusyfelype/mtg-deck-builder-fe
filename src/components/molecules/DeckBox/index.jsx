@@ -2,20 +2,36 @@ import React from 'react';
 import './DeckBox.css';
 
 const DeckBox = ({ deck, onClick, onDelete }) => {
-    const { deckName, cards = [], sideboard = [] } = deck;
+    const {
+        deckName,
+        deck_name,
+        cards = [],
+        sideboard = [],
+        deck_cover_image,
+        color_identity
+    } = deck;
 
-    // Combine all cards to find the one with highest CMC for the cover
-    const allCards = [...cards, ...sideboard].map(item => item.card);
+    const displayName = deck_name || deckName;
 
-    // Find cover image: Highest CMC art_crop
-    const coverCard = allCards.reduce((prev, current) => {
-        return (prev.cmc || 0) > (current.cmc || 0) ? prev : current;
-    }, allCards[0] || {});
+    // Use pre-calculated cover image or fall back to CMC logic
+    let coverImage = deck_cover_image;
+    let colors = color_identity;
 
-    const coverImage = coverCard.image_uris?.art_crop || coverCard.image_uris?.normal || '';
+    if (!coverImage || !colors) {
+        // Fallback logic for full deck objects (if still used elsewhere)
+        const allCards = [...cards, ...sideboard].map(item => item.card);
 
-    // Extract unique colors for symbols
-    const colors = Array.from(new Set(allCards.flatMap(card => card.color_identity || [])));
+        if (!coverImage) {
+            const coverCard = allCards.reduce((prev, current) => {
+                return (prev.cmc || 0) > (current.cmc || 0) ? prev : current;
+            }, allCards[0] || {});
+            coverImage = coverCard.image_uris?.art_crop || coverCard.image_uris?.normal || '';
+        }
+
+        if (!colors) {
+            colors = Array.from(new Set(allCards.flatMap(card => card.color_identity || [])));
+        }
+    }
 
     // Mapping colors to mana symbols (Arena style)
     const colorMap = {
@@ -53,7 +69,7 @@ const DeckBox = ({ deck, onClick, onDelete }) => {
                         ))}
                     </div>
                     <div className="deck-box__footer">
-                        <span className="deck-box__name">{deckName}</span>
+                        <span className="deck-box__name">{displayName}</span>
                     </div>
                 </div>
             </div>
