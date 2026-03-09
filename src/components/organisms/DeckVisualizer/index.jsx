@@ -49,6 +49,10 @@ const DeckVisualizer = ({
     const groupedMain = useMemo(() => getGroupedCards(deckDraft), [deckDraft, friends]);
     const groupedSideboard = useMemo(() => getGroupedCards(sideboardDraft), [sideboardDraft, friends]);
 
+    const totalMainCount = useMemo(() => {
+        return Object.values(deckDraft).reduce((acc, item) => acc + (item.added || 0), 0);
+    }, [deckDraft]);
+
     const outOfCollectionCards = useMemo(() => {
         const outMain = Object.values(deckDraft).filter(item => item.ownerId === 'out_of_collection');
         const outSide = Object.values(sideboardDraft).filter(item => item.ownerId === 'out_of_collection');
@@ -173,7 +177,7 @@ const DeckVisualizer = ({
             </div>
 
             <section className="deck-visualizer__section">
-                <h3 className="deck-visualizer__section-title">Main Deck</h3>
+                <h3 className="deck-visualizer__section-title">Cards do Deck {totalMainCount > 0 ? `(${totalMainCount})` : ''}</h3>
                 {sortedMainCMCs.length > 0 ? (
                     renderColumns(sortedMainCMCs, groupedMain, onAddCard, onRemoveCard)
                 ) : (

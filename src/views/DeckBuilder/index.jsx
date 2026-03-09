@@ -9,18 +9,10 @@ import './DeckBuilder.css';
 
 const DeckBuilder = () => {
     const navigate = useNavigate();
-
-    // The user's full collection fetched from the API
     const [userCollection, setUserCollection] = useState([]);
     const [loading, setLoading] = useState(false);
-
-    // Manage current filters applied by user (client-side in this view)
     const [currentFilters, setCurrentFilters] = useState({});
-
-    // State for zoomed card modal
     const [zoomedCard, setZoomedCard] = useState(null);
-
-    // Manage the deck draft state (could use a different key in localStorage)
     const [deckDraft, setDeckDraft] = useState(() => {
         const savedDraft = localStorage.getItem('mtg_deck_draft');
         return savedDraft ? JSON.parse(savedDraft) : {};
@@ -57,7 +49,7 @@ const DeckBuilder = () => {
         localStorage.removeItem('mtg_deck_name');
     };
 
-    const fetchUserCollection = useCallback(async () => {
+    const fetchUserCollection = useCallback(async (filters = currentFilters, page = 1) => {
         const savedUser = localStorage.getItem('mtg_user');
         const user = savedUser ? JSON.parse(savedUser) : null;
         const userId = user?.id || user?._id;
@@ -72,7 +64,21 @@ const DeckBuilder = () => {
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const token = localStorage.getItem('mtg_token');
-            const response = await fetch(`${apiBase}/cards-by-user/${userId}`, {
+            const queryParams = new URLSearchParams({ page: page.toString(), limit: '30' });
+
+            Object.keys(filters || {}).forEach(key => {
+                if (filters[key]) {
+                    if (key === 'colors') {
+                        if (filters.colors.length > 0) {
+                            queryParams.append('color_identity', filters.colors.join(','));
+                        }
+                    } else {
+                        queryParams.append(key, filters[key]);
+                    }
+                }
+            });
+
+            const response = await fetch(`${apiBase}/cards-by-user/${userId}?${queryParams.toString()}`, {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})
                 }
@@ -140,12 +146,26 @@ const DeckBuilder = () => {
         }
     }, []);
 
-    const fetchFriendCollection = async (friendId) => {
+    const fetchFriendCollection = async (friendId, filters = currentFilters, page = 1) => {
         setLoadingFriendCollection(true);
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const token = localStorage.getItem('mtg_token');
-            const response = await fetch(`${apiBase}/cards-by-user/${friendId}`, {
+            const queryParams = new URLSearchParams({ page: page.toString(), limit: '100' });
+
+            Object.keys(filters || {}).forEach(key => {
+                if (filters[key]) {
+                    if (key === 'colors') {
+                        if (filters.colors.length > 0) {
+                            queryParams.append('color_identity', filters.colors.join(','));
+                        }
+                    } else {
+                        queryParams.append(key, filters[key]);
+                    }
+                }
+            });
+
+            const response = await fetch(`${apiBase}/cards-by-user/${friendId}?${queryParams.toString()}`, {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})
                 }
@@ -167,8 +187,15 @@ const DeckBuilder = () => {
     };
 
     useEffect(() => {
-        fetchUserCollection();
+        fetchUserCollection(currentFilters, 1);
     }, [fetchUserCollection]);
+
+    useEffect(() => {
+        fetchUserCollection(currentFilters, 1);
+        if (selectedFriend) {
+            fetchFriendCollection(selectedFriend.user_id, currentFilters, 1);
+        }
+    }, [currentFilters, selectedFriend]);
 
     useEffect(() => {
         if (friends.length === 0) {
@@ -182,7 +209,7 @@ const DeckBuilder = () => {
             setFriendCollection([]);
         } else {
             setSelectedFriend(friend);
-            fetchFriendCollection(friend.user_id);
+            fetchFriendCollection(friend.user_id, currentFilters, 1);
         }
     };
 
@@ -195,7 +222,6 @@ const DeckBuilder = () => {
                 limit: allCardsPerPage.toString()
             });
 
-            // Add other filters
             Object.keys(filters).forEach(key => {
                 if (filters[key]) {
                     if (key === 'colors') {
@@ -245,25 +271,6 @@ const DeckBuilder = () => {
             setAllCardsPage(1);
         }
     }, [showAllCards, currentFilters, fetchAllCards]);
-
-    // Client-side filtering logic
-    const filteredCards = useMemo(() => {
-        return userCollection.filter(card => {
-            if (currentFilters.printed_name && !card.name?.toLowerCase().includes(currentFilters.printed_name.toLowerCase())) {
-                if (!card.printed_name?.toLowerCase().includes(currentFilters.printed_name.toLowerCase())) {
-                    return false;
-                }
-            }
-            if (currentFilters.colors && currentFilters.colors.length > 0) {
-                const colorsArr = Array.isArray(currentFilters.colors) ? currentFilters.colors : [currentFilters.colors];
-                if (!colorsArr.every(c => card.color_identity?.includes(c))) return false;
-            }
-            if (currentFilters.type_line && !card.type_line?.toLowerCase().includes(currentFilters.type_line.toLowerCase())) return false;
-            if (currentFilters.set_name && !card.set_name?.toLowerCase().includes(currentFilters.set_name.toLowerCase())) return false;
-            if (currentFilters.cmc && card.cmc !== Number(currentFilters.cmc)) return false;
-            return true;
-        });
-    }, [userCollection, currentFilters]);
 
     const handleSearch = (filters) => {
         setCurrentFilters(filters);
@@ -336,7 +343,6 @@ const DeckBuilder = () => {
             return { ...prev, [compositeKey]: { ...existing, added: newAdded } };
         });
     };
-
 
     const handleAddToCollection = async (selectedItems) => {
         const savedUser = localStorage.getItem('mtg_user');
@@ -544,7 +550,7 @@ const DeckBuilder = () => {
                         <div className="deck-builder-loading">Carregando sua coleção...</div>
                     ) : (
                         <CardHorizontalList
-                            cards={filteredCards}
+                            cards={userCollection}
                             collectionDraft={deckDraft}
                             sideboardDraft={sideboardDraft}
                             onAddCard={handleAddCard}
@@ -627,18 +633,7 @@ const DeckBuilder = () => {
                             <div className="deck-builder-empty">Este amigo não possui cards na coleção.</div>
                         ) : (
                             <CardHorizontalList
-                                cards={friendCollection.filter(card => {
-                                    // Apply same filters to friend collection
-                                    if (currentFilters.printed_name && !card.name?.toLowerCase().includes(currentFilters.printed_name.toLowerCase())) return false;
-                                    if (currentFilters.colors && currentFilters.colors.length > 0) {
-                                        const colorsArr = Array.isArray(currentFilters.colors) ? currentFilters.colors : [currentFilters.colors];
-                                        if (!colorsArr.every(c => card.color_identity?.includes(c))) return false;
-                                    }
-                                    if (currentFilters.type_line && !card.type_line?.toLowerCase().includes(currentFilters.type_line.toLowerCase())) return false;
-                                    if (currentFilters.set_name && !card.set_name?.toLowerCase().includes(currentFilters.set_name.toLowerCase())) return false;
-                                    if (currentFilters.cmc && card.cmc !== Number(currentFilters.cmc)) return false;
-                                    return true;
-                                })}
+                                cards={friendCollection}
                                 collectionDraft={deckDraft}
                                 sideboardDraft={sideboardDraft}
                                 onAddCard={handleAddCard}

@@ -17,7 +17,6 @@ const DeckEditor = () => {
     const [currentFilters, setCurrentFilters] = useState({});
     const [zoomedCard, setZoomedCard] = useState(null);
 
-    // Isolated localStorage keys for each deck being edited
     const draftKey = `mtg_edit_draft_${deckId}`;
     const sideboardDraftKey = `mtg_edit_sideboard_draft_${deckId}`;
     const nameKey = `mtg_edit_name_${deckId}`;
@@ -114,7 +113,7 @@ const DeckEditor = () => {
         }
     }, [deckId, deckDraft, sideboardDraft, deckName]);
 
-    const fetchUserCollection = useCallback(async () => {
+    const fetchUserCollection = useCallback(async (filters = currentFilters, page = 1) => {
         const savedUser = localStorage.getItem('mtg_user');
         const user = savedUser ? JSON.parse(savedUser) : null;
         const userId = user?.id || user?._id;
@@ -128,7 +127,21 @@ const DeckEditor = () => {
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const token = localStorage.getItem('mtg_token');
-            const response = await fetch(`${apiBase}/cards-by-user/${userId}`, {
+            const queryParams = new URLSearchParams({ page: page.toString(), limit: '30' });
+
+            Object.keys(filters || {}).forEach(key => {
+                if (filters[key]) {
+                    if (key === 'colors') {
+                        if (filters.colors.length > 0) {
+                            queryParams.append('color_identity', filters.colors.join(','));
+                        }
+                    } else {
+                        queryParams.append(key, filters[key]);
+                    }
+                }
+            });
+
+            const response = await fetch(`${apiBase}/cards-by-user/${userId}?${queryParams.toString()}`, {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})
                 }
@@ -139,7 +152,7 @@ const DeckEditor = () => {
                 const cardsWithStock = result.data.cards.map(item => ({
                     ...item.card,
                     maxQuantity: item.quantity,
-                    ownerId: userId
+                    ownerId: userId // Track who owns the card
                 }));
                 setUserCollection(cardsWithStock);
             }
@@ -169,36 +182,41 @@ const DeckEditor = () => {
     const fetchAllCards = useCallback(async (filters, page = 1) => {
         setLoadingAllCards(true);
         try {
-            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
-            const queryParams = new URLSearchParams();
-            if (filters.printed_name) queryParams.append('printed_name', filters.printed_name);
-            if (filters.colors && filters.colors.length > 0) {
-                const colorsArr = Array.isArray(filters.colors) ? filters.colors : [filters.colors];
-                colorsArr.forEach(c => queryParams.append('colors[]', c));
-            }
-            if (filters.type_line) queryParams.append('type_line', filters.type_line);
-            if (filters.set_name) queryParams.append('set_name', filters.set_name);
-            if (filters.cmc) queryParams.append('cmc', filters.cmc);
-            queryParams.append('page', page.toString());
-            queryParams.append('perPage', allCardsPerPage.toString());
+                       const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                limit: allCardsPerPage.toString()
+            });
+
+            Object.keys(filters).forEach(key => {
+                if (filters[key]) {
+                    if (key === 'colors') {
+                        if (filters.colors.length > 0) {
+                            queryParams.append('color_identity', filters.colors.join(','));
+                        }
+                    } else {
+                        queryParams.append(key, filters[key]);
+                    }
+                }
+            });
 
             const response = await fetch(`${apiBase}/cards?${queryParams.toString()}`);
             const result = await response.json();
-
             if (result.success && result.data && result.data.cards) {
-                const newCards = result.data.cards.map(card => ({
+                const cardsWithOwner = result.data.cards.map(card => ({
                     ...card,
-                    ownerId: 'out_of_collection',
-                    maxQuantity: 4
+                    maxQuantity: 4,
+                    ownerId: 'out_of_collection'
                 }));
 
                 if (page === 1) {
-                    setAllCards(newCards);
+                    setAllCards(cardsWithOwner);
                 } else {
-                    setAllCards(prev => [...prev, ...newCards]);
+                    setAllCards(prev => [...prev, ...cardsWithOwner]);
                 }
 
-                if (newCards.length < allCardsPerPage) {
+                // If we got fewer results than the page size, we're at the end
+                if (cardsWithOwner.length < allCardsPerPage) {
                     setHasMoreAllCards(false);
                 } else {
                     setHasMoreAllCards(true);
@@ -249,12 +267,26 @@ const DeckEditor = () => {
         }
     }, []);
 
-    const fetchFriendCollection = async (friendId) => {
+    const fetchFriendCollection = async (friendId, filters = currentFilters, page = 1) => {
         setLoadingFriendCollection(true);
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const token = localStorage.getItem('mtg_token');
-            const response = await fetch(`${apiBase}/cards-by-user/${friendId}`, {
+            const queryParams = new URLSearchParams({ page: page.toString(), limit: '100' });
+
+            Object.keys(filters || {}).forEach(key => {
+                if (filters[key]) {
+                    if (key === 'colors') {
+                        if (filters.colors.length > 0) {
+                            queryParams.append('color_identity', filters.colors.join(','));
+                        }
+                    } else {
+                        queryParams.append(key, filters[key]);
+                    }
+                }
+            });
+
+            const response = await fetch(`${apiBase}/cards-by-user/${friendId}?${queryParams.toString()}`, {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})
                 }
@@ -274,6 +306,18 @@ const DeckEditor = () => {
             setLoadingFriendCollection(false);
         }
     };
+    
+    useEffect(() => {
+        fetchDeckData();
+        fetchUserCollection();
+    }, [fetchDeckData, fetchUserCollection]);
+
+    useEffect(() => {
+        fetchUserCollection(currentFilters, 1);
+        if (selectedFriend) {
+            fetchFriendCollection(selectedFriend.user_id, currentFilters, 1);
+        }
+    }, [currentFilters, selectedFriend]);
 
     useEffect(() => {
         if (friends.length === 0) {
@@ -290,11 +334,6 @@ const DeckEditor = () => {
             fetchFriendCollection(friend.user_id);
         }
     };
-
-    useEffect(() => {
-        fetchDeckData();
-        fetchUserCollection();
-    }, [fetchDeckData, fetchUserCollection]);
 
     // Same filter and handle logic as DeckBuilder
     const filteredCards = useMemo(() => {
