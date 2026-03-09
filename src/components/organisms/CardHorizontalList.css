@@ -17,6 +17,7 @@
     scroll-behavior: smooth;
     align-items: flex-start;
     min-height: 520px;
+    justify-content: flex-start;
 }
 
 .card-horizontal-list--small {

@@ -31,7 +31,7 @@ const CardPreviewModal = ({ isOpen, onClose, card }) => {
 
     // Helper to get the best resolution image
     const getImageUri = (imageUris) => {
-        if (!imageUris) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'; // Placeholder
+        if (!imageUris) return '/not-found-image.png'; // Placeholder
         return imageUris.large || imageUris.png || imageUris.normal || imageUris.small;
     };
 

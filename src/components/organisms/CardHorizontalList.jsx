@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useEffect } from 'react';
 import CardItem from '../molecules/CardItem';
+import CollectionCardItem from '../molecules/CollectionCardItem';
 import './CardHorizontalList.css';
 
 const CardHorizontalList = ({
@@ -15,7 +16,8 @@ const CardHorizontalList = ({
     onLoadMore,
     onImageClick,
     ownerId,
-    isFriendList = false
+    isFriendList = false,
+    isCollectionMode = false
 }) => {
     const [zoomLevel, setZoomLevel] = React.useState(() => {
         return localStorage.getItem('mtg_card_list_zoom') || 'normal';
@@ -109,11 +111,24 @@ const CardHorizontalList = ({
             <div className={`card-horizontal-list ${zoomLevel === 'small' ? 'card-horizontal-list--small' : ''}`} ref={listRef}>
                 {cards.map((card) => {
                     const compositeKey = `${card.id}_${card.ownerId || ownerId}`;
-                    const draftItem = collectionDraft[compositeKey] || { added: 0, current: 0 };
+                    const draftItem = collectionDraft[compositeKey] || (isCollectionMode ? collectionDraft[card.id] : null) || { added: 0, current: 0 };
                     const sideboardItem = sideboardDraft[compositeKey] || { added: 0 };
                     const stock = typeof card.maxQuantity === 'number'
                         ? card.maxQuantity - (draftItem.added + sideboardItem.added)
                         : undefined;
+
+                    if (isCollectionMode) {
+                        return (
+                            <CollectionCardItem
+                                key={card.id}
+                                card={card}
+                                addedCount={draftItem.added || 0}
+                                onAdd={onAddCard}
+                                onRemove={onRemoveCard}
+                                onImageClick={onImageClick}
+                            />
+                        );
+                    }
 
                     return (
                         <CardItem

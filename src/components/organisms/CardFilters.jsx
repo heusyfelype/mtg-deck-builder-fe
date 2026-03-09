@@ -6,10 +6,33 @@ const CardFilters = ({ onSearch }) => {
     const [filters, setFilters] = useState({
         printed_name: '',
         cmc: '',
-        color_identity: '',
         type_line: '',
         set_name: ''
     });
+
+    const [selectedColors, setSelectedColors] = useState([]);
+
+    const colorMap = {
+        'W': 'white',
+        'U': 'blue',
+        'B': 'black',
+        'R': 'red',
+        'G': 'green',
+        'C': 'colorless'
+    };
+
+    const toggleColor = (color) => {
+        setSelectedColors(prev => {
+            if (color === 'C') {
+                return prev.includes('C') ? [] : ['C'];
+            } else {
+                const filtered = prev.filter(c => c !== 'C');
+                return filtered.includes(color)
+                    ? filtered.filter(c => c !== color)
+                    : [...filtered, color];
+            }
+        });
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -27,18 +50,22 @@ const CardFilters = ({ onSearch }) => {
                 .map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
                 .filter(([_, v]) => v !== '')
         );
+
+        if (selectedColors.length > 0) {
+            activeFilters.color_identity = selectedColors.join(',');
+        }
+
         onSearch(activeFilters);
     };
 
     const handleClear = () => {
-        const emptyFilters = {
+        setFilters({
             printed_name: '',
             cmc: '',
-            color_identity: '',
             type_line: '',
             set_name: ''
-        };
-        setFilters(emptyFilters);
+        });
+        setSelectedColors([]);
         onSearch({});
     };
 
@@ -69,14 +96,21 @@ const CardFilters = ({ onSearch }) => {
                     onChange={handleChange}
                     className="card-filters__input card-filters__input--small"
                 />
-                <input
-                    type="text"
-                    name="color_identity"
-                    placeholder="Cores (Ex: R,U)"
-                    value={filters.color_identity}
-                    onChange={handleChange}
-                    className="card-filters__input card-filters__input--small"
-                />
+
+                <div className="card-filters__color-picker">
+                    {Object.keys(colorMap).map(color => (
+                        <button
+                            key={color}
+                            type="button"
+                            className={`mana-symbol mana-symbol--${colorMap[color]} ${selectedColors.includes(color) ? 'mana-symbol--active' : ''}`}
+                            onClick={() => toggleColor(color)}
+                            title={colorMap[color]}
+                        >
+                            {color}
+                        </button>
+                    ))}
+                </div>
+
                 <input
                     type="text"
                     name="set_name"

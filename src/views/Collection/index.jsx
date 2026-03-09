@@ -218,6 +218,7 @@ const Collection = () => {
                     hasMore={hasMore}
                     onLoadMore={handleLoadMore}
                     onImageClick={setZoomedCard}
+                    isCollectionMode={true}
                 />
             </div>
 
