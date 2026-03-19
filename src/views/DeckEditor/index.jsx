@@ -17,6 +17,13 @@ const DeckEditor = () => {
     const [currentFilters, setCurrentFilters] = useState({});
     const [zoomedCard, setZoomedCard] = useState(null);
 
+    const [userCollectionPage, setUserCollectionPage] = useState(1);
+    const [hasMoreUserCollection, setHasMoreUserCollection] = useState(true);
+    const [loadingUserCollection, setLoadingUserCollection] = useState(false);
+
+    const [isSaving, setIsSaving] = useState(false);
+    const [isCloning, setIsCloning] = useState(false);
+
     const draftKey = `mtg_edit_draft_${deckId}`;
     const sideboardDraftKey = `mtg_edit_sideboard_draft_${deckId}`;
     const nameKey = `mtg_edit_name_${deckId}`;
@@ -124,6 +131,7 @@ const DeckEditor = () => {
             return;
         }
 
+        setLoadingUserCollection(true);
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const token = localStorage.getItem('mtg_token');
@@ -154,10 +162,25 @@ const DeckEditor = () => {
                     maxQuantity: item.quantity,
                     ownerId: userId // Track who owns the card
                 }));
-                setUserCollection(cardsWithStock);
+                
+                if (page === 1) {
+                    setUserCollection(cardsWithStock);
+                } else {
+                    setUserCollection(prev => [...prev, ...cardsWithStock]);
+                }
+
+                if (cardsWithStock.length < 30) {
+                    setHasMoreUserCollection(false);
+                } else {
+                    setHasMoreUserCollection(true);
+                }
+            } else {
+                setHasMoreUserCollection(false);
             }
         } catch (error) {
             console.error('Error fetching user collection:', error);
+        } finally {
+            setLoadingUserCollection(false);
         }
     }, [navigate]);
 
@@ -313,11 +336,12 @@ const DeckEditor = () => {
     }, [fetchDeckData, fetchUserCollection]);
 
     useEffect(() => {
+        setUserCollectionPage(1);
         fetchUserCollection(currentFilters, 1);
         if (selectedFriend) {
             fetchFriendCollection(selectedFriend.user_id, currentFilters, 1);
         }
-    }, [currentFilters, selectedFriend]);
+    }, [currentFilters, selectedFriend, fetchUserCollection]);
 
     useEffect(() => {
         if (friends.length === 0) {
@@ -548,6 +572,7 @@ const DeckEditor = () => {
             }))
         }];
 
+        setIsSaving(true);
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const response = await fetch(`${apiBase}/decks-by-user`, {
@@ -562,6 +587,8 @@ const DeckEditor = () => {
             }
         } catch (error) {
             console.error('Error updating deck:', error);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -608,6 +635,7 @@ const DeckEditor = () => {
             }))
         }];
 
+        setIsCloning(true);
         try {
             const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
             const response = await fetch(`${apiBase}/decks-by-user`, {
@@ -623,6 +651,8 @@ const DeckEditor = () => {
         } catch (error) {
             console.error('Error cloning deck:', error);
             alert('Erro ao clonar deck.');
+        } finally {
+            setIsCloning(false);
         }
     };
 
@@ -642,13 +672,18 @@ const DeckEditor = () => {
                 <div className="view-deck-editor__header-actions">
                     <Button variant="secondary" onClick={() => navigate('/home')}>Voltar</Button>
                     {isReadOnly ? (
-                        <Button variant="primary" onClick={handleCloneDeck}>
+                        <Button variant="primary" onClick={handleCloneDeck} isLoading={isCloning}>
                             Clonar para Meus Decks
                         </Button>
                     ) : (
-                        <Button variant="primary" onClick={handleSaveEdits} disabled={totalAdded === 0}>
-                            Salvar Alterações ({totalMain} + {totalSide})
-                        </Button>
+                        <>
+                            <Button variant="secondary" onClick={handleCloneDeck} isLoading={isCloning}>
+                                Criar Cópia
+                            </Button>
+                            <Button variant="primary" onClick={handleSaveEdits} disabled={totalAdded === 0} isLoading={isSaving}>
+                                Salvar Alterações ({totalMain} + {totalSide})
+                            </Button>
+                        </>
                     )}
                 </div>
             </div>
@@ -664,7 +699,12 @@ const DeckEditor = () => {
                     <section className="deck-editor-section">
                         <h3>Minha Coleção</h3>
                         {loading && userCollection.length === 0 ? (
-                            <div className="deck-editor-loading">Carregando sua coleção...</div>
+                            <div className="deck-editor-loading">
+                                <div>Carregando sua coleção...</div>
+                                <div className="global-spinner-container">
+                                    <div className="global-spinner"></div>
+                                </div>
+                            </div>
                         ) : (
                             <CardHorizontalList
                                 cards={filteredCards}
@@ -674,10 +714,15 @@ const DeckEditor = () => {
                                 onRemoveCard={handleRemoveCard}
                                 onAddSideboard={handleAddSideboard}
                                 onRemoveSideboard={handleRemoveSideboard}
+                                loading={loadingUserCollection}
+                                hasMore={hasMoreUserCollection}
+                                onLoadMore={() => {
+                                    if (loadingUserCollection || !hasMoreUserCollection) return;
+                                    const nextPage = userCollectionPage + 1;
+                                    setUserCollectionPage(nextPage);
+                                    fetchUserCollection(currentFilters, nextPage);
+                                }}
                                 onImageClick={setZoomedCard}
-                                loading={loading}
-                                hasMore={false}
-                                onLoadMore={() => { }}
                                 ownerId={JSON.parse(localStorage.getItem('mtg_user'))?.id || JSON.parse(localStorage.getItem('mtg_user'))?._id}
                             />
                         )}
@@ -698,7 +743,12 @@ const DeckEditor = () => {
                         {showFriends && (
                             <div className="friends-list">
                                 {loadingFriends ? (
-                                    <div className="friends-list__loading">Carregando amigos...</div>
+                                    <div className="friends-list__loading">
+                                        <div>Carregando amigos...</div>
+                                        <div className="global-spinner-container">
+                                            <div className="global-spinner"></div>
+                                        </div>
+                                    </div>
                                 ) : friends.length > 0 ? (
                                     <>
                                         <div className="friends-list__container">
@@ -747,7 +797,12 @@ const DeckEditor = () => {
                     <section className="deck-editor-section deck-editor-section--friend">
                         <h3>Coleção de {selectedFriend.name}</h3>
                         {loadingFriendCollection ? (
-                            <div className="deck-editor-loading">Carregando coleção de {selectedFriend.name}...</div>
+                            <div className="deck-editor-loading">
+                                <div>Carregando coleção de {selectedFriend.name}...</div>
+                                <div className="global-spinner-container">
+                                    <div className="global-spinner"></div>
+                                </div>
+                            </div>
                         ) : friendCollection.length === 0 ? (
                             <div className="deck-editor-empty">Este amigo não possui cards na coleção.</div>
                         ) : (
@@ -798,7 +853,12 @@ const DeckEditor = () => {
                     <section className="deck-editor-section deck-editor-section--all-cards">
                         <h3>Cards fora da coleção</h3>
                         {loadingAllCards && allCards.length === 0 ? (
-                            <div className="deck-editor-loading">Buscando cards na base global...</div>
+                            <div className="deck-editor-loading">
+                                <div>Carregando cards...</div>
+                                <div className="global-spinner-container">
+                                    <div className="global-spinner"></div>
+                                </div>
+                            </div>
                         ) : allCards.length === 0 ? (
                             <div className="deck-editor-empty">Nenhum card encontrado na base global com estes filtros.</div>
                         ) : (

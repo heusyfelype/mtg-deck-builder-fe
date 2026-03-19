@@ -193,6 +193,9 @@ const Home = () => {
                     <Button variant="primary" onClick={() => navigate('/deck-builder')}>
                         Criar Novo Deck
                     </Button>
+                    <Button variant="primary" onClick={() => navigate('/compare-decks')}>
+                        Comparar Decks
+                    </Button>
                     <Button variant="secondary" onClick={() => navigate('/friends')}>
                         Gerenciar Amizades
                     </Button>
@@ -209,7 +212,12 @@ const Home = () => {
                     </div>
 
                     {loadingDecks ? (
-                        <div className="view-home__decks-loading">Carregando seus decks...</div>
+                        <div className="view-home__decks-loading">
+                            <div>Carregando seus decks...</div>
+                            <div className="global-spinner-container">
+                                <div className="global-spinner"></div>
+                            </div>
+                        </div>
                     ) : userDecks.length > 0 ? (
                         <div className="view-home__decks-grid">
                             {userDecks.map((deck, index) => (
@@ -241,7 +249,12 @@ const Home = () => {
                     {showFriends && (
                         <div className="friends-list">
                             {loadingFriends ? (
-                                <div className="friends-list__loading">Carregando amigos...</div>
+                                <div className="friends-list__loading">
+                                    <div>Carregando amigos...</div>
+                                    <div className="global-spinner-container">
+                                        <div className="global-spinner"></div>
+                                    </div>
+                                </div>
                             ) : friends.length > 0 ? (
                                 <>
                                     <div className="friends-list__container">
@@ -289,7 +302,12 @@ const Home = () => {
 
 
                         {loadingFriendDecks ? (
-                            <div className="view-home__decks-loading">Carregando decks de {selectedFriend.name}...</div>
+                            <div className="view-home__decks-loading">
+                                <div>Carregando decks de {selectedFriend.name}...</div>
+                                <div className="global-spinner-container">
+                                    <div className="global-spinner"></div>
+                                </div>
+                            </div>
                         ) : friendDecks.length > 0 ? (
                             <div className="view-home__decks-grid">
                                 {friendDecks.map((deck, index) => (

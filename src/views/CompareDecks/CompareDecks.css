@@ -1,0 +1,383 @@
+.view-compare {
+    padding: 2rem;
+    min-height: 100vh;
+    background-color: var(--bg-primary, #121212);
+    color: var(--text-primary, #ffffff);
+}
+
+.view-compare__content {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.view-compare__header {
+    margin-bottom: 3rem;
+}
+
+.view-compare__back {
+    margin-bottom: 1rem;
+}
+
+.view-compare__title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(90deg, #ff8a00, #e52e71);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.view-compare__columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .view-compare__columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+.view-compare__column {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.view-compare__column-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #ff8a00;
+}
+
+.view-compare__friend-select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.view-compare__friend-select:focus {
+    outline: none;
+    border-color: #ff8a00;
+}
+
+.view-compare__friend-select option {
+    background-color: var(--bg-primary, #121212);
+    color: white;
+}
+
+.view-compare__search-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.view-compare__search-input:focus {
+    outline: none;
+    border-color: #ff8a00;
+}
+
+.view-compare__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 0.5rem;
+}
+
+.view-compare__list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.view-compare__list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.view-compare__list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.view-compare__list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.view-compare__list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    transition: transform 0.2s, background 0.2s, border 0.2s;
+    cursor: pointer;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.view-compare__list-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.view-compare__list-item--selected {
+    border-color: #ff8a00;
+    background: rgba(255, 138, 0, 0.15);
+}
+
+.view-compare__checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #ff8a00;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.view-compare__deck-box-mini {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.view-compare__deck-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    padding-right: 90px;
+}
+
+.view-compare__deck-name {
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.view-compare__deck-count {
+    font-size: 0.9rem;
+    color: #b3b3b3;
+    margin-top: 0.2rem;
+}
+
+.view-compare__deck-colors {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 0.25rem;
+    z-index: 15;
+}
+
+.view-compare__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-compare-empty,
+.view-compare-loading {
+    padding: 2rem;
+    text-align: center;
+    color: #b3b3b3;
+}
+
+/* Símbolos Virtuais de Mana transferidos da DeckBox para uso unificado \*/
+.mana-symbol {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.8);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mana-symbol--white {
+    background-color: #f8f6d8;
+}
+
+.mana-symbol--blue {
+    background-color: #c1d7e9;
+}
+
+.mana-symbol--black {
+    background-color: #bab1ab;
+    color: #fff;
+}
+
+.mana-symbol--red {
+    background-color: #e49977;
+}
+
+.mana-symbol--green {
+    background-color: #a3c095;
+}
+
+/* SEÇÃO DE RESULTADOS DA COMPARAÇÃO */
+.view-compare__results-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.view-compare__results-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #ff8a00;
+}
+
+.view-compare__results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 1.5rem;
+}
+
+.view-compare__shared-card {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    gap: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.view-compare__shared-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.view-compare__shared-art {
+    width: 20%;
+    height: 100%;
+    border-radius: 6px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s;
+}
+
+.view-compare__shared-art:hover {
+    transform: scale(1.05);
+}
+
+.view-compare__shared-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.view-compare__shared-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+}
+
+.view-compare__shared-appearances {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.view-compare__badge {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.view-compare__badge-owner {
+    font-weight: 600;
+    color: #b3b3b3;
+}
+
+.view-compare__badge-owner--you {
+    color: #e52e71;
+}
+
+.view-compare__badge-deck {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ffffff;
+}
+
+.view-compare__badge-qty {
+    background: rgba(255, 138, 0, 0.2);
+    color: #ff8a00;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .view-compare__results-grid {
+        grid-template-columns: 1fr;
+    }
+}

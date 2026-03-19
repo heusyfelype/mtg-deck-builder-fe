@@ -58,3 +58,19 @@
 .atom-button--full-width {
     width: 100%;
 }
+
+/* Spinner Wrapper inside buttons */
+.button-spinner-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.button-spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+    margin-top: 0;
+    margin-bottom: 0;
+}

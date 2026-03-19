@@ -16,7 +16,8 @@ const DeckVisualizer = ({
     onCancelEdit,
     onAddToCollection,
     readOnly = false,
-    friends = []
+    friends = [],
+    isAddingToCollection = false
 }) => {
     const [modalConfig, setModalConfig] = useState(null); // { type: 'clear' | 'cancel', message: string, onConfirm: () => void }
     const [isAddCollectionOpen, setIsAddCollectionOpen] = useState(false);
@@ -227,6 +228,7 @@ const DeckVisualizer = ({
                     onAddToCollection(selected);
                     setIsAddCollectionOpen(false);
                 }}
+                isSaving={isAddingToCollection}
             />
         </div>
     );

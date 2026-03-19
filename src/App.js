@@ -6,6 +6,7 @@ import Collection from './views/Collection';
 import DeckBuilder from './views/DeckBuilder';
 import DeckEditor from './views/DeckEditor';
 import Friends from './views/Friends';
+import CompareDecks from './views/CompareDecks';
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/friends" element={<Friends />} />
           <Route path="/deck-builder" element={<DeckBuilder />} />
           <Route path="/deck-editor/:deckId" element={<DeckEditor />} />
+          <Route path="/compare-decks" element={<CompareDecks />} />
           {/* Default redirect to login for now */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />

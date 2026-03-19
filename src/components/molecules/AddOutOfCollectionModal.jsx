@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './AddOutOfCollectionModal.css';
 import Button from '../../components/atoms/Button';
 
-const AddOutOfCollectionModal = ({ isOpen, onClose, outOfCollectionCards, onSave }) => {
+const AddOutOfCollectionModal = ({ isOpen, onClose, outOfCollectionCards, onSave, isSaving = false }) => {
     const [selectedCards, setSelectedCards] = useState({});
 
     // Initialize/Reset selection when modal opens
@@ -69,6 +69,7 @@ const AddOutOfCollectionModal = ({ isOpen, onClose, outOfCollectionCards, onSave
                         variant="primary"
                         onClick={handleSave}
                         disabled={Object.values(selectedCards).every(v => !v)}
+                        isLoading={isSaving}
                     >
                         Adicionar selecionados
                     </Button>
