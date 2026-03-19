@@ -167,4 +167,5 @@ const CardHorizontalList = ({
     );
 };
 
-export default CardHorizontalList;
+export default React.memo(CardHorizontalList);
+

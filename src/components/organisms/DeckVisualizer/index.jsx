@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { getCardImage } from '../../../utils/cardImageUtils';
 import './DeckVisualizer.css';
 import AddOutOfCollectionModal from '../../molecules/AddOutOfCollectionModal';
 
@@ -98,7 +99,7 @@ const DeckVisualizer = ({
                             >
                                 <div className="deck-visualizer__card-content">
                                     <img
-                                        src={card.image_uris?.small || card.image_uris?.normal}
+                                        src={getCardImage(card, 'small')}
                                         alt={card.name}
                                         className="deck-visualizer__card-image"
                                     />

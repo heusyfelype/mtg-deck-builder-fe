@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/atoms/Button';
 import CardPreviewModal from '../../components/molecules/CardPreviewModal';
+import { getCardImage } from '../../utils/cardImageUtils';
 import './CompareDecks.css';
 
 const CompareDecks = () => {
@@ -197,7 +198,7 @@ const CompareDecks = () => {
                     if (!deckQuantities.has(cardName)) {
                         deckQuantities.set(cardName, {
                             quantity: 0,
-                            art: item.card.image_uris?.small || item.card.image_uris?.normal || '',
+                            art: getCardImage(item.card, 'small'),
                             cardObject: item.card
                         });
                     }

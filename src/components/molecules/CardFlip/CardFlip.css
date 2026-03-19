@@ -1,0 +1,62 @@
+/* ─── CardFlip ─────────────────────────────────────────────────────────────── */
+
+.card-flip {
+    perspective: 1000px;
+    display: block;
+    width: 100%;
+    /* Magic card standard ratio: 63mm × 88mm */
+    aspect-ratio: 63 / 88;
+    position: relative;
+}
+
+.card-flip__inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-flip--flipped .card-flip__inner {
+    transform: rotateY(180deg);
+}
+
+/* Each face */
+.card-flip__face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: inherit;
+    overflow: hidden;
+}
+
+.card-flip__face--back {
+    transform: rotateY(180deg);
+}
+
+/* Image inside each face fills the container */
+.card-flip__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    display: block;
+}
+
+/* Small "2F" badge indicating a double-faced card */
+.card-flip__indicator--df {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(255, 138, 0, 0.85);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    pointer-events: none;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    z-index: 2;
+}

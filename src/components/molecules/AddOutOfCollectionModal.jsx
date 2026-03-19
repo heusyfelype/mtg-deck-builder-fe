@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './AddOutOfCollectionModal.css';
 import Button from '../../components/atoms/Button';
+import { getCardImage } from '../../utils/cardImageUtils';
 
 const AddOutOfCollectionModal = ({ isOpen, onClose, outOfCollectionCards, onSave, isSaving = false }) => {
     const [selectedCards, setSelectedCards] = useState({});
@@ -49,7 +50,7 @@ const AddOutOfCollectionModal = ({ isOpen, onClose, outOfCollectionCards, onSave
                                 />
                                 <div className="add-to-collection-modal__card-info">
                                     <img
-                                        src={item.card.image_uris?.small || item.card.image_uris?.normal}
+                                        src={getCardImage(item.card, 'small')}
                                         alt={item.card.name}
                                         className="add-to-collection-modal__card-img"
                                     />

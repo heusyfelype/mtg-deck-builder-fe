@@ -1,4 +1,6 @@
 import React from 'react';
+import { getCardImage, isFlipCard } from '../../utils/cardImageUtils';
+import CardFlip from './CardFlip';
 import './CardItem.css';
 
 const CardItem = ({
@@ -15,23 +17,31 @@ const CardItem = ({
     isFriendCard = false,
     isOutOfCollection = false
 }) => {
-    // Priority: large > png > normal > small
-    const getImageUri = (imageUris) => {
-        if (!imageUris) return '/not-found-image.png'; // Placeholder
-        return imageUris.large || imageUris.png || imageUris.normal || imageUris.small;
-    };
-
-    const imageUrl = getImageUri(card.image_uris);
+    const imageUrl = getCardImage(card);
     const isSelected = addedCount > 0;
+    const isDFC = isFlipCard(card);
 
     return (
         <div className={`card-item ${isSelected ? 'card-item--selected' : ''} ${isFriendCard ? 'card-item--friend' : ''} ${isOutOfCollection ? 'card-item--out-of-collection' : ''}`}>
             <div
                 className="card-item__image-container"
-                onClick={() => onImageClick && onImageClick(card)}
                 style={{ cursor: onImageClick ? 'pointer' : 'default' }}
             >
-                <img src={imageUrl} alt={card.printed_name || card.name} className="card-item__image" />
+                {isDFC ? (
+                    <CardFlip
+                        card={card}
+                        altText={card.printed_name || card.name}
+                        imgClassName="card-item__image"
+                        onClick={() => onImageClick && onImageClick(card)}
+                    />
+                ) : (
+                    <img
+                        src={imageUrl}
+                        alt={card.printed_name || card.name}
+                        className="card-item__image"
+                        onClick={() => onImageClick && onImageClick(card)}
+                    />
+                )}
 
                 {(addedCount > 0 || sideboardCount > 0) && (
                     <div className="card-item__overlay">
@@ -50,11 +60,6 @@ const CardItem = ({
                     </div>
                 )}
 
-                {isOutOfCollection && (
-                    <div className="card-item__out-of-collection-badge">
-                        Fora da coleção
-                    </div>
-                )}
             </div>
 
             <div className="card-item__controls">
@@ -106,4 +111,4 @@ const CardItem = ({
     );
 };
 
-export default CardItem;
+export default React.memo(CardItem);

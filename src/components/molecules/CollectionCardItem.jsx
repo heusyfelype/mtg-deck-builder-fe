@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getCardImage, isFlipCard } from '../../utils/cardImageUtils';
+import CardFlip from './CardFlip';
 import './CollectionCardItem.css';
 
 const CollectionCardItem = ({
@@ -8,13 +10,8 @@ const CollectionCardItem = ({
     onRemove,
     onImageClick
 }) => {
-    // Priority: large > png > normal > small
-    const getImageUri = (imageUris) => {
-        if (!imageUris) return '/not-found-image.png'; // Placeholder
-        return imageUris.large || imageUris.png || imageUris.normal || imageUris.small;
-    };
-
-    const imageUrl = getImageUri(card.image_uris);
+    const imageUrl = getCardImage(card);
+    const isDFC = isFlipCard(card);
     // If API provides a quantity > 0, initialize local editable count from it
     const apiQuantity = card && card.quantity ? Number(card.quantity) : 0;
     // Prefer the draft `addedCount` (from localStorage) over API quantity so user edits persist
@@ -59,10 +56,23 @@ const CollectionCardItem = ({
         <div className={`collection-card-item ${isSelected ? 'collection-card-item--selected' : ''}`}>
             <div
                 className="collection-card-item__image-container"
-                onClick={() => onImageClick && onImageClick(card)}
                 style={{ cursor: onImageClick ? 'pointer' : 'default' }}
             >
-                <img src={imageUrl} alt={card.printed_name || card.name} className="collection-card-item__image" />
+                {isDFC ? (
+                    <CardFlip
+                        card={card}
+                        altText={card.printed_name || card.name}
+                        imgClassName="collection-card-item__image"
+                        onClick={() => onImageClick && onImageClick(card)}
+                    />
+                ) : (
+                    <img
+                        src={imageUrl}
+                        alt={card.printed_name || card.name}
+                        className="collection-card-item__image"
+                        onClick={() => onImageClick && onImageClick(card)}
+                    />
+                )}
 
                 {effectiveCount > 0 && (
                     <div className="collection-card-item__overlay">
@@ -106,4 +116,4 @@ const CollectionCardItem = ({
     );
 };
 
-export default CollectionCardItem;
+export default React.memo(CollectionCardItem);
