@@ -74,11 +74,6 @@ const CollectionCardItem = ({
                     />
                 )}
 
-                {effectiveCount > 0 && (
-                    <div className="collection-card-item__overlay">
-                        <span className="collection-card-item__added-badge">+{effectiveCount}</span>
-                    </div>
-                )}
             </div>
 
             <div className="collection-card-item__controls">

@@ -4,6 +4,8 @@ import './CardPreviewModal.css';
 
 const CardPreviewModal = ({ isOpen, onClose, card }) => {
     // Prevent scrolling on the body when modal is open
+
+    console.log("CARD PREVIEW IS CALLED")
     useEffect(() => {
         document.body.style.overflow = isOpen ? 'hidden' : 'unset';
         return () => { document.body.style.overflow = 'unset'; };

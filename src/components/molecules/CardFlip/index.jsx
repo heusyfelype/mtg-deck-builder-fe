@@ -14,6 +14,7 @@ import './CardFlip.css';
  *   when the side actually changes, preventing unnecessary state updates.
  */
 const CardFlip = ({ card, altText, className = '', onClick, imgClassName = '' }) => {
+    console.log("CARD FLIP: ", card)
     const isDFC = isFlipCard(card);
 
     // Memoize image resolution — only recalculates if card reference changes
