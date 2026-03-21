@@ -13,12 +13,12 @@ const CardFilters = ({ onSearch }) => {
     const [selectedColors, setSelectedColors] = useState([]);
 
     const colorMap = {
-        'W': 'white',
-        'U': 'blue',
+        'C': 'colorless',
         'B': 'black',
-        'R': 'red',
         'G': 'green',
-        'C': 'colorless'
+        'R': 'red',
+        'U': 'blue',
+        'W': 'white',
     };
 
     const toggleColor = (color) => {
@@ -54,6 +54,8 @@ const CardFilters = ({ onSearch }) => {
         if (selectedColors.length > 0) {
             activeFilters.color_identity = selectedColors.join(',');
         }
+
+        activeFilters.oracle_text = activeFilters.printed_name;
 
         onSearch(activeFilters);
     };

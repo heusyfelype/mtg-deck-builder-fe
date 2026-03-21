@@ -32,7 +32,7 @@ const CardItem = ({
                         card={card}
                         altText={card.printed_name || card.name}
                         imgClassName="card-item__image"
-                        onClick={() => onImageClick && onImageClick(card)}
+                        onClick={() => { console.log("CLICK DFC"); onImageClick && onImageClick(card) }}
                     />
                 ) : (
                     <img
@@ -41,17 +41,6 @@ const CardItem = ({
                         className="card-item__image"
                         onClick={() => onImageClick && onImageClick(card)}
                     />
-                )}
-
-                {(addedCount > 0 || sideboardCount > 0) && (
-                    <div className="card-item__overlay">
-                        {addedCount > 0 && (
-                            <span className="card-item__added-badge">+{addedCount}</span>
-                        )}
-                        {sideboardCount > 0 && (
-                            <span className="card-item__sideboard-badge">SB: {sideboardCount}</span>
-                        )}
-                    </div>
                 )}
 
                 {typeof stock === 'number' && (
