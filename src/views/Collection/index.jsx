@@ -95,13 +95,15 @@ const Collection = () => {
 
     const handleAddCard = (card) => {
         setDraft(prev => {
-            const existing = prev[card.id] || { added: 0, current: 0, card };
+            const apiQuantity = card.quantity ? Number(card.quantity) : 0;
+            const existing = prev[card.id];
+            const currentQuantity = existing ? existing.added : apiQuantity;
+            
             return {
                 ...prev,
                 [card.id]: {
-                    ...existing,
-                    added: existing.added + 1,
-                    card
+                    card,
+                    added: currentQuantity + 1
                 }
             };
         });
@@ -109,17 +111,19 @@ const Collection = () => {
 
     const handleRemoveCard = (card) => {
         setDraft(prev => {
+            const apiQuantity = card.quantity ? Number(card.quantity) : 0;
             const existing = prev[card.id];
-            if (!existing || existing.added <= 0) return prev;
-            const newAdded = existing.added - 1;
-            if (newAdded === 0 && existing.current === 0) {
-                const newDraft = { ...prev };
-                delete newDraft[card.id];
-                return newDraft;
-            }
+            const currentQuantity = existing ? existing.added : apiQuantity;
+            if (!existing && currentQuantity === 0) return prev;
+            
+            const nextQuantity = Math.max(0, currentQuantity - 1);
+            
             return {
                 ...prev,
-                [card.id]: { ...existing, added: newAdded }
+                [card.id]: {
+                    card,
+                    added: nextQuantity
+                }
             };
         });
     };
@@ -136,10 +140,13 @@ const Collection = () => {
             return;
         }
 
-        // Build the payload: one object per user with all their cards
-        const cards = Object.entries(draft)
-            .filter(([, item]) => item.added > 0)
-            .map(([cardId, item]) => ({ cardId, quantity: item.added }));
+        const modifiedCards = Object.values(draft).filter(item => {
+            const apiQuantity = item.card && item.card.quantity ? Number(item.card.quantity) : 0;
+            return item.added !== apiQuantity;
+        });
+
+        // Build the payload: one object per user with modified cards
+        const cards = modifiedCards.map(item => ({ cardId: item.card.id, quantity: item.added }));
 
         if (cards.length === 0) {
             alert('Nenhum card foi adicionado para salvar.');
@@ -180,7 +187,11 @@ const Collection = () => {
     };
 
 
-    const totalAdded = Object.values(draft).reduce((acc, curr) => acc + curr.added, 0);
+    const modifiedCards = Object.values(draft).filter(item => {
+        const apiQuantity = item.card && item.card.quantity ? Number(item.card.quantity) : 0;
+        return item.added !== apiQuantity;
+    });
+    const modifiedCount = modifiedCards.length;
     const hasMore = page < totalPages;
 
     return (
@@ -197,9 +208,9 @@ const Collection = () => {
                     <Button
                         variant="primary"
                         onClick={handleSave}
-                        disabled={totalAdded === 0 || saving}
+                        disabled={modifiedCount === 0 || saving}
                     >
-                        {saving ? 'Salvando...' : `Salvar Alterações ${totalAdded > 0 ? `(+${totalAdded})` : ''}`}
+                        {saving ? 'Salvando...' : `Salvar Alterações ${modifiedCount > 0 ? `(${modifiedCount})` : ''}`}
                     </Button>
                 </div>
             </div>

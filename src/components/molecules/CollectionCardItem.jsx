@@ -5,7 +5,7 @@ import './CollectionCardItem.css';
 
 const CollectionCardItem = ({
     card,
-    addedCount = 0,
+    draftQuantity,
     onAdd,
     onRemove,
     onImageClick
@@ -14,40 +14,35 @@ const CollectionCardItem = ({
     const isDFC = isFlipCard(card);
     // If API provides a quantity > 0, initialize local editable count from it
     const apiQuantity = card && card.quantity ? Number(card.quantity) : 0;
-    // Prefer the draft `addedCount` (from localStorage) over API quantity so user edits persist
-    const [localCount, setLocalCount] = useState(addedCount > 0 ? addedCount : apiQuantity);
-    const dirtyRef = useRef(false);
+    // Prefer the draft quantity over API quantity so user edits persist
+    const initialQuantity = draftQuantity !== undefined ? draftQuantity : apiQuantity;
+    const [localCount, setLocalCount] = useState(initialQuantity);
+    const dirtyRef = useRef(draftQuantity !== undefined);
     const prevApiQuantityRef = useRef(apiQuantity);
-    const prevAddedCountRef = useRef(addedCount);
+    const prevDraftQuantityRef = useRef(draftQuantity);
 
     // derive a stable key for the card so we can reset when a different card is rendered
     const cardKey = card?.id || card?._id || card?.oracle_id || card?.name || '';
 
     // initialize/reset when the card changes
     useEffect(() => {
-        const initial = addedCount > 0 ? addedCount : apiQuantity;
+        const initial = draftQuantity !== undefined ? draftQuantity : apiQuantity;
         setLocalCount(initial);
-        dirtyRef.current = false;
+        dirtyRef.current = draftQuantity !== undefined;
         prevApiQuantityRef.current = apiQuantity;
-        prevAddedCountRef.current = addedCount;
+        prevDraftQuantityRef.current = draftQuantity;
     }, [cardKey]);
 
-    // sync props -> localCount only when not manually edited (dirty)
+    // sync props -> localCount when parent pushes new state
     useEffect(() => {
-        if (dirtyRef.current) {
-            // user has edited; don't overwrite
-            prevApiQuantityRef.current = apiQuantity;
-            prevAddedCountRef.current = addedCount;
-            return;
-        }
-
-        if (prevApiQuantityRef.current !== apiQuantity || prevAddedCountRef.current !== addedCount) {
-            const newInitial = addedCount > 0 ? addedCount : apiQuantity;
+        if (prevApiQuantityRef.current !== apiQuantity || prevDraftQuantityRef.current !== draftQuantity) {
+            const newInitial = draftQuantity !== undefined ? draftQuantity : apiQuantity;
             setLocalCount(newInitial);
             prevApiQuantityRef.current = apiQuantity;
-            prevAddedCountRef.current = addedCount;
+            prevDraftQuantityRef.current = draftQuantity;
+            if (draftQuantity !== undefined) dirtyRef.current = true;
         }
-    }, [apiQuantity, addedCount]);
+    }, [apiQuantity, draftQuantity]);
 
     const effectiveCount = localCount;
     const isSelected = effectiveCount > 0;

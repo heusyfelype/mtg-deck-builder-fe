@@ -41,7 +41,8 @@ const DeckVisualizer = ({
                     ...item.card,
                     isFriendCard,
                     isOutOfCollection,
-                    ownerName
+                    ownerName,
+                    ownerId: item.ownerId
                 });
             }
         });

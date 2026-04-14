@@ -111,10 +111,11 @@ const CardHorizontalList = ({
             <div className={`card-horizontal-list ${zoomLevel === 'small' ? 'card-horizontal-list--small' : ''}`} ref={listRef}>
                 {cards.map((card) => {
                     const compositeKey = `${card.id}_${card.ownerId || ownerId}`;
-                    const draftItem = collectionDraft[compositeKey] || (isCollectionMode ? collectionDraft[card.id] : null) || { added: 0, current: 0 };
+                    const draftItem = collectionDraft[compositeKey] || (isCollectionMode ? collectionDraft[card.id] : null);
                     const sideboardItem = sideboardDraft[compositeKey] || { added: 0 };
+                    const draftItemAdded = draftItem ? (draftItem.added || 0) : 0;
                     const stock = typeof card.maxQuantity === 'number'
-                        ? card.maxQuantity - (draftItem.added + sideboardItem.added)
+                        ? card.maxQuantity - (draftItemAdded + sideboardItem.added)
                         : undefined;
 
                     if (isCollectionMode) {
@@ -122,7 +123,7 @@ const CardHorizontalList = ({
                             <CollectionCardItem
                                 key={card.id}
                                 card={card}
-                                addedCount={draftItem.added || 0}
+                                draftQuantity={draftItem ? draftItem.added : undefined}
                                 onAdd={onAddCard}
                                 onRemove={onRemoveCard}
                                 onImageClick={onImageClick}
@@ -134,8 +135,8 @@ const CardHorizontalList = ({
                         <CardItem
                             key={card.id}
                             card={card}
-                            collectionCount={draftItem.current || 0}
-                            addedCount={draftItem.added || 0}
+                            collectionCount={draftItem ? (draftItem.current || 0) : 0}
+                            addedCount={draftItem ? (draftItem.added || 0) : 0}
                             sideboardCount={sideboardItem.added || 0}
                             stock={stock}
                             onAdd={onAddCard}
